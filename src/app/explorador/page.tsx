@@ -1,5 +1,5 @@
-import { Search } from "lucide-react";
-import { Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus } from "lucide-react";
+import Link from "next/link";
+import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus } from "lucide-react";
 
 export default function Home() {
   return (
@@ -7,7 +7,7 @@ export default function Home() {
       {/* TOPBAR */}
       <header className="flex items-center h-14 px-4 border-b border-white/10 bg-slate-950/80 backdrop-blur-sm shrink-0 z-50">
         {/* Logo */}
-        <div className="flex items-center gap-2 w-52 shrink-0">
+        <Link href="/" className="flex items-center gap-2 w-52 shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
           <div className="relative">
             <Network className="w-6 h-6 text-red-500" />
             <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
@@ -15,7 +15,7 @@ export default function Home() {
           <span className="text-lg font-bold tracking-tight">
             <span className="text-red-500">Red</span>Contratos
           </span>
-        </div>
+        </Link>
 
         {/* Search */}
         <div className="flex-1 max-w-2xl mx-auto">
