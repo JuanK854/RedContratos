@@ -3,24 +3,18 @@
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
-  SheetDescription,
-  SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   FileText,
   DollarSign,
-  Building2,
-  Percent,
   MapPin,
   Users,
   Calendar,
   ExternalLink,
   Sparkles,
-  X,
 } from "lucide-react";
 
 interface NodeDetail {
@@ -100,24 +94,19 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-[480px] sm:w-[540px] bg-slate-950 border-l border-white/10 text-white p-0 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-white/10 px-6 py-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-              <FileText className="h-5 w-5 text-blue-400" />
-            </div>
-            <div>
-              <SheetTitle className="text-base font-bold text-white">{data.name}</SheetTitle>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400 uppercase">
-                  {data.type}
-                </span>
-                <span className="font-mono text-xs text-slate-500">{data.rfc}</span>
-              </div>
+        <div className="flex items-start gap-3 border-b border-white/10 px-6 py-4 pr-12">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+            <FileText className="h-5 w-5 text-blue-400" />
+          </div>
+          <div>
+            <SheetTitle className="text-base font-bold text-white">{data.name}</SheetTitle>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400 uppercase">
+                {data.type}
+              </span>
+              <span className="font-mono text-xs text-slate-500">{data.rfc}</span>
             </div>
           </div>
-          <SheetClose className="rounded-md text-slate-400 hover:text-white transition-colors">
-            <X className="h-5 w-5" />
-          </SheetClose>
         </div>
 
         {/* Scrollable content */}
