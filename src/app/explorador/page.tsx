@@ -3,7 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus, X } from "lucide-react";
+import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus } from "lucide-react";
+import { PanelDetalle } from "@/components/panel-detalle";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
@@ -24,13 +25,11 @@ interface GraphNode {
   group: "proveedor" | "institucion";
   score?: number;
   val?: number;
-  flags?: {
-    fantasma: boolean;
-    fraccionamiento: boolean;
-    espejo: boolean;
-  };
+  flags?: { fantasma: boolean; fraccionamiento: boolean; espejo: boolean };
   x?: number;
   y?: number;
+  fx?: number;
+  fy?: number;
 }
 
 interface GraphLink {
@@ -45,17 +44,30 @@ interface GraphData {
   links: GraphLink[];
 }
 
+interface PanelData {
+  name: string;
+  rfc: string;
+  type: "proveedor" | "institucion";
+  score: number;
+  totalContratos: number;
+  montoTotal: string;
+  dependencias: number;
+  pctAdjDirecta: number;
+  flags: string[];
+}
+
 export default function Explorador() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [loadingGraph, setLoadingGraph] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [activeRfc, setActiveRfc] = useState<string | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelData, setPanelData] = useState<PanelData | undefined>(undefined);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const graphRef = useRef<{ zoom: (v: number) => void } | null>(null);
+  const graphRef = useRef<{ zoom: (v: number, ms?: number) => void } | null>(null);
 
   const searchProveedores = useCallback(async (q: string) => {
     if (q.length < 3) { setResults([]); setSearchError(null); return; }
@@ -69,7 +81,7 @@ export default function Explorador() {
       if ((data.results ?? []).length === 0) setSearchError("Sin resultados");
     } catch (err) {
       setResults([]);
-      setSearchError(`Error al conectar con la API: ${err}`);
+      setSearchError(`Error al conectar con la API`);
     } finally {
       setLoadingSearch(false);
     }
@@ -92,13 +104,16 @@ export default function Explorador() {
 
   const loadGraph = useCallback(async (rfc: string) => {
     setResults([]);
-    setSelectedNode(null);
     setActiveRfc(rfc);
     setLoadingGraph(true);
     try {
       const res = await fetch(`${API}/graph?rfc=${encodeURIComponent(rfc)}`);
       const data = await res.json();
-      setGraphData(data);
+      if (data.nodes && data.nodes.length > 0) {
+        setGraphData(data);
+      } else {
+        setGraphData(null);
+      }
     } catch {
       setGraphData(null);
     } finally {
@@ -107,19 +122,50 @@ export default function Explorador() {
   }, []);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    setSelectedNode(node);
+    const nodeLinks = graphData?.links.filter(
+      (l) => l.source === node.id || l.target === node.id
+    ) ?? [];
+    const totalMonto = nodeLinks.reduce((sum, l) => sum + (l.monto_total || 0), 0);
+
+    const formatMonto = (n: number) => {
+      if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B MXN`;
+      if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M MXN`;
+      if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K MXN`;
+      return `$${n} MXN`;
+    };
+
+    setPanelData({
+      name: node.name,
+      rfc: node.id,
+      type: node.group,
+      score: node.score ?? 0,
+      totalContratos: nodeLinks.reduce((sum, l) => sum + (l.num_contratos || 0), 0),
+      montoTotal: formatMonto(totalMonto),
+      dependencias: node.group === "proveedor" ? nodeLinks.length : 1,
+      pctAdjDirecta: node.score ? Math.min(node.score, 100) : 0,
+      flags: node.flags
+        ? [
+            node.flags.fantasma ? "Empresa Fantasma" : "",
+            node.flags.fraccionamiento ? "Fraccionamiento" : "",
+            node.flags.espejo ? "Contrato Espejo" : "",
+          ].filter(Boolean)
+        : [],
+    });
+    setPanelOpen(true);
+
     if (node.group === "proveedor" && node.id !== activeRfc) {
       loadGraph(node.id);
     }
-  }, [activeRfc, loadGraph]);
+  }, [graphData, activeRfc, loadGraph]);
 
   const nodeColor = (node: GraphNode) => {
     if (node.group === "proveedor") {
+      if (node.flags?.fantasma) return "#22c55e";
       if (node.score && node.score >= 70) return "#ef4444";
       if (node.score && node.score >= 40) return "#f97316";
       return "#3b82f6";
     }
-    return "#64748b";
+    return "#475569";
   };
 
   const zoom = (delta: number) => {
@@ -158,7 +204,6 @@ export default function Explorador() {
             />
           </div>
 
-          {/* Dropdown resultados */}
           {(results.length > 0 || loadingSearch || searchError) && (
             <div className="absolute top-full mt-1 left-0 right-0 bg-slate-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
               {loadingSearch && (
@@ -247,91 +292,52 @@ export default function Explorador() {
             <ForceGraph2D
               ref={graphRef as never}
               graphData={graphData}
-              nodeLabel="name"
+              nodeLabel={(n: GraphNode) => n.name.length > 25 ? n.name.slice(0, 23) + "…" : n.name}
               nodeColor={nodeColor}
-              nodeVal={(n) => (n as GraphNode).val ?? 8}
-              linkColor={() => "rgba(255,255,255,0.15)"}
-              linkWidth={(l) => Math.max(1, Math.log((l as GraphLink).num_contratos + 1))}
+              nodeVal={(n: GraphNode) => {
+                if (n.group === "proveedor") return 16;
+                const conexiones = graphData.links.filter(l => l.source === n.id || l.target === n.id).length;
+                return Math.max(5, Math.min(12, 4 + conexiones * 1.5));
+              }}
+              linkColor={() => "rgba(148,163,184,0.2)"}
+              linkWidth={(l: GraphLink) => Math.max(0.5, Math.min(3, Math.log((l.num_contratos || 1) + 1) * 0.8))}
+              linkDirectionalParticles={2}
+              linkDirectionalParticleWidth={1}
+              linkDirectionalParticleSpeed={0.003}
               backgroundColor="#0f172a"
-              onNodeClick={(n) => handleNodeClick(n as GraphNode)}
+              onNodeClick={(n: GraphNode) => handleNodeClick(n)}
+              d3AlphaDecay={0.02}
+              d3VelocityDecay={0.3}
+              warmupTicks={80}
+              cooldownTicks={60}
               nodeCanvasObjectMode={() => "after"}
               nodeCanvasObject={(node, ctx, globalScale) => {
                 const n = node as GraphNode & { x: number; y: number };
-                if (globalScale < 1.5) return;
                 const label = n.name.length > 20 ? n.name.slice(0, 18) + "…" : n.name;
-                ctx.font = `${10 / globalScale}px sans-serif`;
-                ctx.fillStyle = "rgba(255,255,255,0.7)";
+                const fontSize = Math.max(6, Math.min(11, 9 / globalScale));
+                const nodeRadius = ((n.val ?? 8) / globalScale);
+                ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
+                ctx.fillStyle = "rgba(255,255,255,0.6)";
                 ctx.textAlign = "center";
-                ctx.fillText(label, n.x, n.y + (n.val ?? 8) / globalScale + 4);
+                ctx.fillText(label, n.x, n.y + nodeRadius + fontSize + 2);
               }}
             />
           )}
 
           {/* Zoom controls */}
           <div className="absolute bottom-4 right-4 flex flex-col gap-1 z-10">
-            <button onClick={() => zoom(2)} className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900 border border-white/10 text-slate-400 hover:text-white transition-all">
+            <button onClick={() => zoom(1.5)} className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900 border border-white/10 text-slate-400 hover:text-white transition-all">
               <Plus className="w-4 h-4" />
             </button>
-            <button onClick={() => zoom(0.5)} className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900 border border-white/10 text-slate-400 hover:text-white transition-all">
+            <button onClick={() => zoom(0.67)} className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900 border border-white/10 text-slate-400 hover:text-white transition-all">
               <Minus className="w-4 h-4" />
             </button>
           </div>
-
-          {/* Panel nodo seleccionado */}
-          {selectedNode && (
-            <div className="absolute top-4 right-4 w-64 bg-slate-950/95 border border-white/10 rounded-xl p-4 z-20 shadow-xl">
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <p className="text-sm font-semibold text-white leading-tight">{selectedNode.name}</p>
-                <button onClick={() => setSelectedNode(null)} className="text-slate-500 hover:text-white shrink-0">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <p className="text-xs text-slate-500 font-mono mb-3">{selectedNode.id}</p>
-
-              {selectedNode.group === "proveedor" && (
-                <>
-                  {selectedNode.score !== undefined && (
-                    <div className="mb-3">
-                      <p className="text-xs text-slate-500 mb-1">Score de riesgo</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-red-500"
-                            style={{ width: `${selectedNode.score}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-bold text-red-400">{selectedNode.score}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedNode.flags && (
-                    <div className="flex flex-col gap-1">
-                      {selectedNode.flags.fantasma && (
-                        <FlagRow emoji="👻" label="Empresa fantasma" />
-                      )}
-                      {selectedNode.flags.fraccionamiento && (
-                        <FlagRow emoji="✂️" label="Fraccionamiento" />
-                      )}
-                      {selectedNode.flags.espejo && (
-                        <FlagRow emoji="🪞" label="Contrato espejo" />
-                      )}
-                      {!selectedNode.flags.fantasma && !selectedNode.flags.fraccionamiento && !selectedNode.flags.espejo && (
-                        <p className="text-xs text-slate-600">Sin alertas activas</p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {selectedNode.group === "institucion" && (
-                <p className="text-xs text-slate-400">Dependencia gubernamental</p>
-              )}
-            </div>
-          )}
         </main>
       </div>
+
+      {/* Panel de detalle */}
+      <PanelDetalle open={panelOpen} onOpenChange={setPanelOpen} data={panelData} />
     </div>
   );
 }
@@ -375,13 +381,4 @@ function ScoreBadge({ score }: { score: number }) {
 
 function FlagBadge({ label, title }: { label: string; title: string }) {
   return <span title={title} className="text-sm">{label}</span>;
-}
-
-function FlagRow({ emoji, label }: { emoji: string; label: string }) {
-  return (
-    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20">
-      <span className="text-sm">{emoji}</span>
-      <span className="text-xs text-red-400 font-medium">{label}</span>
-    </div>
-  );
 }
