@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# backend data (CSVs procesados, no subir al repo)
+backend/data/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
