@@ -81,6 +81,25 @@ export default function Explorador() {
   const forcesAppliedRef = useRef(false);
   const searchParams = useSearchParams();
 
+  const loadGraph = useCallback(async (rfc: string) => {
+    setResults([]);
+    setActiveRfc(rfc);
+    setLoadingGraph(true);
+    try {
+      const res = await fetch(`${API}/graph?rfc=${encodeURIComponent(rfc)}`);
+      const data = await res.json();
+      if (data.nodes && data.nodes.length > 0) {
+        setGraphData(data);
+      } else {
+        setGraphData(null);
+      }
+    } catch {
+      setGraphData(null);
+    } finally {
+      setLoadingGraph(false);
+    }
+  }, []);
+
   useEffect(() => {
     const rfc = searchParams.get("rfc");
     if (rfc) loadGraph(rfc);
@@ -135,25 +154,6 @@ export default function Explorador() {
     }
     if (e.key === "Escape") setResults([]);
   };
-
-  const loadGraph = useCallback(async (rfc: string) => {
-    setResults([]);
-    setActiveRfc(rfc);
-    setLoadingGraph(true);
-    try {
-      const res = await fetch(`${API}/graph?rfc=${encodeURIComponent(rfc)}`);
-      const data = await res.json();
-      if (data.nodes && data.nodes.length > 0) {
-        setGraphData(data);
-      } else {
-        setGraphData(null);
-      }
-    } catch {
-      setGraphData(null);
-    } finally {
-      setLoadingGraph(false);
-    }
-  }, []);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
     const nodeLinks = graphData?.links.filter(
