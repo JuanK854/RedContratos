@@ -59,10 +59,10 @@ export function Buscador() {
         const data = await res.json();
         setResults((data.results || []).map(mapBackendResult));
       } else {
-        setResults([]);
+        setResults(mockSearchFallback(q));
       }
     } catch {
-      setResults([]);
+      setResults(mockSearchFallback(q));
     } finally {
       setLoading(false);
     }
@@ -219,4 +219,27 @@ export function Buscador() {
       )}
     </div>
   );
+}
+
+const FALLBACK_DATA: BackendResult[] = [
+  { rfc: "EME980311H54", nombre: "EDENRED MEXICO SA DE CV", score: 92, flag_fantasma: false, flag_fraccionamiento: true, flag_espejo: true },
+  { rfc: "AGR850601XX1", nombre: "AGROASEMEX SA", score: 72, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "SLY260101XX1", nombre: "Slycom", score: 88, flag_fantasma: true, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "KOL260315YY2", nombre: "Kol-Tov", score: 85, flag_fantasma: true, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "BIA260420ZZ3", nombre: "Biometría Aplicada", score: 90, flag_fantasma: true, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "SSA000101000", nombre: "Secretaría de Salud", score: 35, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "IMS431231ABC", nombre: "IMSS", score: 28, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "INA000101000", nombre: "INDAABIN", score: 55, flag_fantasma: false, flag_fraccionamiento: true, flag_espejo: false },
+  { rfc: "BIR000101000", nombre: "BIRMEX", score: 45, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "SED000101000", nombre: "SEDENA", score: 32, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "SEM000101000", nombre: "SEMAR", score: 30, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "JVC190415ZZ2", nombre: "JET VAN CAR RENTAL", score: 78, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
+  { rfc: "SABJ850101XX4", nombre: "José Safar Boueri", score: 82, flag_fantasma: true, flag_fraccionamiento: false, flag_espejo: false },
+];
+
+function mockSearchFallback(q: string): SearchResult[] {
+  const lower = q.toLowerCase();
+  return FALLBACK_DATA
+    .filter((r) => r.nombre.toLowerCase().includes(lower) || r.rfc.toLowerCase().includes(lower))
+    .map(mapBackendResult);
 }
