@@ -88,6 +88,9 @@ python backend/create_tables.py
 
 # 3. Cargar contratos limpios en Supabase (upsert por num_contrato, lotes de 500)
 python backend/scripts/load_to_supabase.py
+
+# 4. Calcular proveedores únicos con scoring y cargarlos en Supabase
+python backend/scripts/build_proveedores.py
 ```
 
 El CSV fuente debe estar en `src/documentos-y-contratos/contratos_comprasmx_2026.csv` (encoding latin-1).  
