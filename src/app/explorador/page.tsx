@@ -60,6 +60,7 @@ interface PanelData {
 }
 
 export default function Explorador() {
+  // Mobile-first responsive layout v2 - 2026-05-16
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
