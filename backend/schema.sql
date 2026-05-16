@@ -38,5 +38,6 @@ CREATE TABLE IF NOT EXISTS conexiones (
   nombre_proveedor TEXT,
   institucion      TEXT,
   num_contratos    INT,
-  monto_total      NUMERIC
+  monto_total      NUMERIC,
+  UNIQUE (rfc_proveedor, institucion)
 );

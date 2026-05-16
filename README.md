@@ -91,6 +91,9 @@ python backend/scripts/load_to_supabase.py
 
 # 4. Calcular proveedores únicos con scoring y cargarlos en Supabase
 python backend/scripts/build_proveedores.py
+
+# 5. Construir conexiones proveedor→institución y cargarlas en Supabase
+python backend/scripts/build_conexiones.py
 ```
 
 El CSV fuente debe estar en `src/documentos-y-contratos/contratos_comprasmx_2026.csv` (encoding latin-1).  
