@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus } from "lucide-react";
 import { PanelDetalle } from "@/components/panel-detalle";
+import { forceManyBody, forceLink, forceCenter, forceCollide } from "d3-force";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
@@ -67,7 +68,29 @@ export default function Explorador() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelData, setPanelData] = useState<PanelData | undefined>(undefined);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const graphRef = useRef<{ zoom: (v: number, ms?: number) => void } | null>(null);
+  const graphRef = useRef<{ 
+    zoom: (v: number, ms?: number) => void; 
+    d3Force: (name: string, force?: any) => any; 
+    d3ReheatSimulation: () => void;
+    cooldownTicks: (ticks: number) => void; 
+    refresh: () => void 
+  } | null>(null);
+
+  const forcesAppliedRef = useRef(false);
+
+  // Configurar fuerzas de separación extrema
+  useLayoutEffect(() => {
+    if (!graphRef.current || !graphData || graphData.nodes.length === 0) return;
+    
+    const fg = graphRef.current;
+    forcesAppliedRef.current = false; // Reset cuando cambian los datos
+    
+    fg.d3Force("charge", forceManyBody().strength(-10000).distanceMax(2000));
+    fg.d3Force("link", forceLink(graphData.links).id((d: any) => d.id).distance(500).strength(0.01));
+    fg.d3Force("center", forceCenter(0, 0).strength(0.003));
+    fg.d3Force("collision", forceCollide().radius(120).strength(1));
+    fg.d3ReheatSimulation();
+  }, [graphData]);
 
   const searchProveedores = useCallback(async (q: string) => {
     if (q.length < 3) { setResults([]); setSearchError(null); return; }
@@ -290,38 +313,43 @@ export default function Explorador() {
           {/* Grafo real */}
           {graphData && !loadingGraph && (
             <ForceGraph2D
-              ref={graphRef as never}
+              key={activeRfc}
+              ref={graphRef as any}
               graphData={graphData}
-              nodeLabel={(n: GraphNode) => n.name.length > 25 ? n.name.slice(0, 23) + "…" : n.name}
-              nodeColor={nodeColor}
-              nodeVal={(n: GraphNode) => {
+              nodeLabel={(n: any) => n.name.length > 25 ? n.name.slice(0, 23) + "…" : n.name}
+              nodeColor={nodeColor as any}
+              nodeVal={(n: any) => {
                 if (n.group === "proveedor") return 16;
                 const conexiones = graphData.links.filter(l => l.source === n.id || l.target === n.id).length;
                 return Math.max(5, Math.min(12, 4 + conexiones * 1.5));
               }}
               linkColor={() => "rgba(148,163,184,0.12)"}
-              linkWidth={(l: GraphLink) => Math.max(0.5, Math.min(2, Math.log((l.num_contratos || 1) + 1) * 0.6))}
+              linkWidth={(l: any) => Math.max(0.5, Math.min(2, Math.log((l.num_contratos || 1) + 1) * 0.6))}
               backgroundColor="#0f172a"
-              onNodeClick={(n: GraphNode) => handleNodeClick(n)}
-              d3AlphaDecay={0.005}
-              d3VelocityDecay={0.15}
-              warmupTicks={150}
-              cooldownTicks={120}
-              onEngineTick={(engine) => {
-                engine.d3Force("charge")?.strength(-400);
-                engine.d3Force("link")?.distance(80).strength(0.3);
-                engine.d3Force("center")?.strength(0.03);
+              onNodeClick={(n: any) => handleNodeClick(n)}
+              d3AlphaDecay={0.002}
+              d3VelocityDecay={0.3}
+              warmupTicks={0}
+              cooldownTicks={800}
+              onRenderFramePre={() => {
+                if (!forcesAppliedRef.current && graphRef.current && graphData) {
+                  const fg = graphRef.current;
+                  fg.d3Force("charge", forceManyBody().strength(-10000).distanceMax(2000));
+                  fg.d3Force("link", forceLink(graphData.links).id((d: any) => d.id).distance(500).strength(0.01));
+                  fg.d3Force("center", forceCenter(0, 0).strength(0.003));
+                  fg.d3Force("collision", forceCollide().radius(120).strength(1));
+                  forcesAppliedRef.current = true;
+                }
               }}
               nodeCanvasObjectMode={() => "after"}
-              nodeCanvasObject={(node, ctx, globalScale) => {
-                const n = node as GraphNode & { x: number; y: number };
-                const label = n.name.length > 20 ? n.name.slice(0, 18) + "…" : n.name;
+              nodeCanvasObject={(node: any, ctx: any, globalScale: any) => {
+                const label = node.name.length > 20 ? node.name.slice(0, 18) + "…" : node.name;
                 const fontSize = Math.max(6, Math.min(10, 8 / globalScale));
-                const nodeRadius = ((n.val ?? 8) / globalScale);
+                const nodeRadius = ((node.val ?? 8) / globalScale);
                 ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
                 ctx.fillStyle = "rgba(255,255,255,0.5)";
                 ctx.textAlign = "center";
-                ctx.fillText(label, n.x, n.y + nodeRadius + fontSize + 2);
+                ctx.fillText(label, node.x, node.y + nodeRadius + fontSize + 16);
               }}
             />
           )}

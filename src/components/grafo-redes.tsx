@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { PanelDetalle } from "./panel-detalle";
 import { API_URL } from "@/lib/config";
+import { forceManyBody, forceLink, forceCenter, forceCollide } from "d3-force";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
@@ -103,7 +104,7 @@ export function GrafoRedes() {
     return {
       name: node.name,
       rfc: node.id,
-      type: node.group === "proveedor" ? "proveedor" : "institucion",
+      type: (node.group === "proveedor" ? "proveedor" : "institucion") as "proveedor" | "institucion",
       score: node.score || 0,
       totalContratos: nodeLinks.reduce((sum, l) => sum + (l.num_contratos || 0), 0),
       montoTotal: formatMonto(totalMonto),
@@ -149,9 +150,33 @@ export function GrafoRedes() {
     );
   }
 
+  const fgRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!fgRef.current || graphData.nodes.length === 0) return;
+    
+    const fg = fgRef.current;
+    
+    // Repulsión masiva entre todos los nodos
+    fg.d3Force("charge", forceManyBody().strength(-10000).distanceMax(2000));
+    
+    // Enlaces muy largos y flojos
+    fg.d3Force("link", forceLink(graphData.links).id((d: any) => d.id).distance(500).strength(0.01));
+    
+    // Centro muy débil - apenas mantiene el grafo en vista
+    fg.d3Force("center", forceCenter(0, 0).strength(0.003));
+    
+    // Colisión grande para evitar solapamiento
+    fg.d3Force("collision", forceCollide().radius(120).strength(1));
+    
+    fg.cooldownTicks(1000);
+    fg.refresh();
+  }, [graphData]);
+
   return (
     <div className="relative w-full h-full">
       <ForceGraph2D
+        ref={fgRef}
         graphData={graphData}
         backgroundColor="#0f172a"
         nodeColor={nodeColor as (node: object) => string}
@@ -160,8 +185,8 @@ export function GrafoRedes() {
         linkColor="rgba(255,255,255,0.2)"
         linkWidth={1}
         nodeRelSize={5}
-        cooldownTicks={100}
-        onNodeClick={handleNodeClick}
+        cooldownTicks={500}
+        onNodeClick={handleNodeClick as any}
         nodeCanvasObjectMode={() => "after"}
       />
 
