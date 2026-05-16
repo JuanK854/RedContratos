@@ -82,6 +82,12 @@ export default function Explorador() {
   } | null>(null);
 
   const forcesAppliedRef = useRef(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const rfc = searchParams.get("rfc");
+    if (rfc) loadGraph(rfc);
+  }, [searchParams, loadGraph]);
 
   useLayoutEffect(() => {
     if (!graphRef.current || !graphData || graphData.nodes.length === 0) return;
