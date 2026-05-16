@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus } from "lucide-react";
 import { PanelDetalle } from "@/components/panel-detalle";
+import { ScoreBadge } from "@/components/score-badge";
 import { forceManyBody, forceLink, forceCenter, forceCollide } from "d3-force";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
@@ -185,20 +186,18 @@ export default function Explorador() {
   }, [graphData, activeRfc, loadGraph]);
 
   const nodeColor = (node: GraphNode) => {
-    if (node.group === "proveedor") {
-      if (node.flags?.fantasma) return "#22c55e";
-      if (node.score && node.score >= 70) return "#ef4444";
-      if (node.score && node.score >= 40) return "#f97316";
-      return "#3b82f6";
-    }
-    return "#475569";
+    if (node.id === activeRfc) return "#3b82f6";
+    if (node.flags?.fantasma) return "#22c55e";
+    if (node.group === "institucion") return "#ef4444";
+    if (node.score && node.score > 70) return "#ef4444";
+    if (node.score && node.score >= 40) return "#eab308";
+    return "#3b82f6";
   };
 
   const zoom = (delta: number) => {
     if (graphRef.current) graphRef.current.zoom(delta);
   };
 
-  const proveedorActivo = graphData?.nodes.find(n => n.group === "proveedor");
   const numNodos = graphData?.nodes.length ?? 0;
   const numAristas = graphData?.links.length ?? 0;
 
@@ -273,6 +272,9 @@ export default function Explorador() {
         <aside className="w-52 shrink-0 border-r border-white/10 bg-slate-950 flex flex-col py-4">
           <nav className="flex flex-col gap-1 px-2">
             <SidebarLink icon={Network} label="Explorador de Grafos" active />
+            <Link href="/top">
+              <SidebarLink icon={AlertTriangle} label="Top Riesgo" />
+            </Link>
             <Link href="/alertas">
               <SidebarLink icon={AlertTriangle} label="Alertas Activas" />
             </Link>
@@ -288,11 +290,11 @@ export default function Explorador() {
           {/* Leyenda */}
           {graphData && (
             <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
-              <LegendBadge color="bg-red-500" label={`Nodos: ${numNodos}`} />
+              <LegendBadge color="bg-blue-500" label={`Nodos: ${numNodos}`} />
               <LegendBadge color="bg-slate-500" label={`Aristas: ${numAristas}`} />
-              {proveedorActivo && (
-                <LegendBadge color="bg-red-500" label={`Score: ${proveedorActivo.score ?? "—"}`} />
-              )}
+              <LegendBadge color="bg-red-500" label="Institución" />
+              <LegendBadge color="bg-blue-500" label="Proveedor" />
+              <LegendBadge color="bg-green-500" label="Fantasma" />
             </div>
           )}
 
@@ -322,14 +324,22 @@ export default function Explorador() {
               nodeLabel={(n: any) => n.name.length > 25 ? n.name.slice(0, 23) + "…" : n.name}
               nodeColor={nodeColor as any}
               nodeVal={(n: any) => {
-                if (n.group === "proveedor") return 16;
-                const conexiones = graphData.links.filter(l => l.source === n.id || l.target === n.id).length;
-                return Math.max(5, Math.min(12, 4 + conexiones * 1.5));
+                if (n.id === activeRfc) return 12;
+                if (n.group === "proveedor") return 8;
+                return 6;
               }}
-              linkColor={() => "rgba(148,163,184,0.12)"}
-              linkWidth={(l: any) => Math.max(0.5, Math.min(2, Math.log((l.num_contratos || 1) + 1) * 0.6))}
+              nodeRelSize={10}
+              linkColor={() => "rgba(148,163,184,0.25)"}
+              linkWidth={(l: any) => Math.max(1, Math.min(3, Math.log((l.num_contratos || 1) + 1) * 0.8))}
               backgroundColor="#0f172a"
               onNodeClick={(n: any) => handleNodeClick(n)}
+              nodePointerAreaPaint={(node: any, color: string, ctx: any) => {
+                const r = (node.val ?? 6) * 10;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
+                ctx.fill();
+              }}
               d3AlphaDecay={0.002}
               d3VelocityDecay={0.3}
               warmupTicks={0}
@@ -346,15 +356,32 @@ export default function Explorador() {
                   forcesAppliedRef.current = true;
                 }
               }}
-              nodeCanvasObjectMode={() => "after"}
-              nodeCanvasObject={(node: any, ctx: any, globalScale: any) => {
+              nodeCanvasObjectMode={() => "replace"}
+              nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+                const isCentral = node.id === activeRfc;
+                const color = nodeColor(node);
+                const baseRadius = isCentral ? 16 : (node.group === "proveedor" ? 12 : 8);
+                const radius = baseRadius / globalScale;
+
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, radius + (2 / globalScale), 0, 2 * Math.PI);
+                ctx.strokeStyle = color;
+                ctx.globalAlpha = 0.3;
+                ctx.lineWidth = 2 / globalScale;
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+
                 const label = node.name.length > 20 ? node.name.slice(0, 18) + "…" : node.name;
-                const fontSize = Math.max(6, Math.min(10, 8 / globalScale));
-                const nodeRadius = ((node.val ?? 8) / globalScale);
-                ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
-                ctx.fillStyle = "rgba(255,255,255,0.5)";
+                const fontSize = Math.max(8, Math.min(11, 10 / globalScale));
+                ctx.font = `bold ${fontSize}px system-ui, -apple-system, sans-serif`;
+                ctx.fillStyle = "rgba(255,255,255,0.85)";
                 ctx.textAlign = "center";
-                ctx.fillText(label, node.x, node.y + nodeRadius + fontSize + 16);
+                ctx.fillText(label, node.x, node.y + radius + fontSize + (8 / globalScale));
               }}
             />
           )}
@@ -407,12 +434,7 @@ function LegendBadge({ color, label }: { color: string; label: string }) {
   );
 }
 
-function ScoreBadge({ score }: { score: number }) {
-  const color = score >= 70 ? "bg-red-500/20 text-red-400" : score >= 40 ? "bg-orange-500/20 text-orange-400" : "bg-slate-700 text-slate-400";
-  return (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>{score}</span>
-  );
-}
+
 
 function FlagBadge({ label, title }: { label: string; title: string }) {
   return <span title={title} className="text-sm">{label}</span>;

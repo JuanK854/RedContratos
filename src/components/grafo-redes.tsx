@@ -73,10 +73,11 @@ export function GrafoRedes() {
   }, [fetchGraph, currentRfc]);
 
   const nodeColor = useCallback((node: GraphNode) => {
+    if (node.group === "institucion") return "#475569";
     if (node.flags?.fantasma) return "#22c55e";
-    if (node.group === "proveedor") return "#3b82f6";
-    if (node.group === "institucion") return "#ef4444";
-    return "#94a3b8";
+    if (node.score && node.score > 70) return "#ef4444";
+    if (node.score && node.score >= 40) return "#eab308";
+    return "#3b82f6";
   }, []);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
