@@ -6,15 +6,17 @@ CSV_IN  = ROOT / "src" / "documentos-y-contratos" / "contratos_comprasmx_2026.cs
 CSV_OUT = Path(__file__).parent.parent / "data" / "contratos_clean.csv"
 
 COLUMN_MAP = {
-    "rfc":                       "rfc",
-    "Proveedor o contratista":   "proveedor",
-    "Institución":               "institucion",
-    "Importe DRC":               "monto",
-    "Tipo Procedimiento":        "tipo_procedimiento",
+    "rfc":                          "rfc",
+    "Proveedor o contratista":      "proveedor",
+    "Institución":                  "institucion",
+    "Importe DRC":                  "monto",
+    "Tipo Procedimiento":           "tipo_procedimiento",
     "Fecha de inicio del contrato": "fecha_inicio",
     "Fecha de fin del contrato":    "fecha_fin",
-    "Orden de gobierno":         "orden_gobierno",
-    "Descripción Ramo":          "descripcion_ramo",
+    "Orden de gobierno":            "orden_gobierno",
+    "Descripción Ramo":             "descripcion_ramo",
+    "Núm. del contrato":            "num_contrato",
+    "Título del contrato":          "titulo",
 }
 
 def main():

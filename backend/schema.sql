@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS contratos (
   tipo_procedimiento TEXT,
   fecha_inicio       TEXT,
   fecha_fin          TEXT,
-  num_contrato       TEXT,
+  num_contrato       TEXT UNIQUE,
   titulo             TEXT,
   orden_gobierno     TEXT,
   descripcion_ramo   TEXT

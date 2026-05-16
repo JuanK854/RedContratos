@@ -80,15 +80,20 @@ Ejecuta `backend/schema.sql` en el SQL Editor de Supabase para crear las tablas.
 ## Scripts de datos
 
 ```bash
-# Limpiar el CSV original y generar contratos_clean.csv
+# 1. Limpiar el CSV original
 python backend/scripts/clean_csv.py
 
-# Verificar conexión a Supabase y que las tablas existan
+# 2. Verificar conexión a Supabase y que las tablas existan
 python backend/create_tables.py
+
+# 3. Cargar contratos limpios en Supabase (upsert por num_contrato, lotes de 500)
+python backend/scripts/load_to_supabase.py
 ```
 
 El CSV fuente debe estar en `src/documentos-y-contratos/contratos_comprasmx_2026.csv` (encoding latin-1).  
 El CSV limpio se genera en `backend/data/` (ignorado por git).
+
+> **Nota:** El campo `num_contrato` tiene restricción `UNIQUE` en la tabla `contratos`. Si re-ejecutas `load_to_supabase.py`, las filas existentes se actualizan en lugar de duplicarse.
 
 ---
 
