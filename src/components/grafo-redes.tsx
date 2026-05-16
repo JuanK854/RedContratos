@@ -42,6 +42,7 @@ export function GrafoRedes() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fgRef = useRef<any>(null);
 
   const fetchGraph = useCallback(async (rfc: string) => {
     setLoading(true);
@@ -150,8 +151,6 @@ export function GrafoRedes() {
       </div>
     );
   }
-
-  const fgRef = useRef<any>(null);
 
   useEffect(() => {
     if (!fgRef.current || graphData.nodes.length === 0) return;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus } from "lucide-react";
@@ -78,6 +79,12 @@ export default function Explorador() {
   } | null>(null);
 
   const forcesAppliedRef = useRef(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const rfc = searchParams.get("rfc");
+    if (rfc) loadGraph(rfc);
+  }, [searchParams, loadGraph]);
 
   // Configurar fuerzas de separación extrema
   useLayoutEffect(() => {
