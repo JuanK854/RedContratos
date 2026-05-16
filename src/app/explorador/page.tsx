@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useRef, useLayoutEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus, Menu, X } from "lucide-react";
 import { PanelDetalle } from "@/components/panel-detalle";
 import { ScoreBadge } from "@/components/score-badge";
