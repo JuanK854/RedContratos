@@ -64,6 +64,9 @@ Ejecuta `backend/schema.sql` en el SQL Editor de Supabase para crear las tablas.
 | `lucide-react` | Iconos |
 | `clsx` / `tailwind-merge` / `class-variance-authority` | Utilidades de clases (base shadcn/ui) |
 | `@radix-ui/react-slot` | Primitivos de UI |
+| `shadcn` | CLI y componentes shadcn/ui |
+| `@base-ui/react` | Primitivos de UI accesibles (base-ui) |
+| `tw-animate-css` | Animaciones CSS para Tailwind |
 
 ### Backend
 
