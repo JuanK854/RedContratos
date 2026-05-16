@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { ScoreBadge, getScoreInfo } from "@/components/score-badge";
 import {
   FileText,
   DollarSign,
@@ -78,11 +79,7 @@ interface PanelDetalleProps {
 }
 
 export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDetalleProps) {
-  const scoreColor =
-    data.score >= 80 ? "text-red-500" : data.score >= 50 ? "text-yellow-500" : "text-green-500";
-
-  const scoreLabel =
-    data.score >= 80 ? "Crítico" : data.score >= 50 ? "Alto" : "Bajo";
+  const scoreInfo = getScoreInfo(data.score);
 
   const adjColor =
     data.pctAdjDirecta >= 80 ? "text-red-500" : data.pctAdjDirecta >= 50 ? "text-yellow-500" : "text-green-500";
@@ -98,19 +95,29 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
             <FileText className="h-5 w-5 text-blue-400" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <SheetTitle className="text-base font-bold text-white">{data.name}</SheetTitle>
-            <div className="mt-1 flex items-center gap-2">
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
               <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400 uppercase">
                 {data.type}
               </span>
               <span className="font-mono text-xs text-slate-500">{data.rfc}</span>
+              <ScoreBadge score={data.score} size="sm" />
             </div>
           </div>
         </div>
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+          {/* Score Card */}
+          <div className="rounded-lg border border-white/10 bg-slate-900/50 p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wider">Score de Riesgo</p>
+              <p className={`text-lg font-bold ${scoreInfo.textColor}`}>{scoreInfo.label}</p>
+            </div>
+            <ScoreBadge score={data.score} size="lg" />
+          </div>
+
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-3">
             <StatCard icon={FileText} label="Total Contratos" value={data.totalContratos.toString()} />

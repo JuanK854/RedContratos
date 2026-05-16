@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, Loader2, Building2, ArrowUp, ArrowDown, CornerDownLeft } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import { ScoreBadge } from "@/components/score-badge";
 
 interface SearchResult {
   id: string;
@@ -196,10 +197,10 @@ export function Buscador() {
                     </span>
                   )}
                 </div>
-                <p className="mt-0.5 text-xs text-slate-500 truncate">
-                  Score: {result.score}/100
-                  <span className="ml-2 font-mono text-slate-600">RFC: {result.rfc}</span>
-                </p>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <ScoreBadge score={result.score} size="sm" />
+                  <span className="text-xs text-slate-500 font-mono">RFC: {result.rfc}</span>
+                </div>
               </div>
             </button>
           ))}

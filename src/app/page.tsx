@@ -8,22 +8,36 @@ import { API_URL } from "@/lib/config";
 
 interface Stats {
   total_contratos: number;
+  monto_total: number;
   porcentaje_opacidad: number;
+  total_proveedores: number;
 }
 
 export default function Home() {
-  const [stats, setStats] = useState<Stats>({ total_contratos: 34486, porcentaje_opacidad: 76 });
+  const [stats, setStats] = useState<Stats>({ total_contratos: 34486, monto_total: 300000000000, porcentaje_opacidad: 76, total_proveedores: 0 });
 
   useEffect(() => {
     fetch(`${API_URL}/stats`)
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
-        if (data) setStats({ total_contratos: data.total_contratos, porcentaje_opacidad: data.porcentaje_opacidad });
+        if (data) setStats({
+          total_contratos: data.total_contratos ?? stats.total_contratos,
+          monto_total: data.monto_total ?? stats.monto_total,
+          porcentaje_opacidad: data.porcentaje_opacidad ?? stats.porcentaje_opacidad,
+          total_proveedores: data.total_proveedores ?? 0,
+        });
       })
       .catch(() => {});
   }, []);
 
   const formatNumber = (n: number) => n.toLocaleString("es-MX");
+
+  const formatMonto = (n: number) => {
+    if (n >= 1e12) return `$${(n / 1e12).toFixed(1)}T`;
+    if (n >= 1e9) return `$${(n / 1e9).toFixed(0)}B`;
+    if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`;
+    return `$${n}`;
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -47,6 +61,10 @@ export default function Home() {
 
           {/* Nav */}
           <nav className="flex items-center gap-6">
+            <Link href="/top" className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="hidden sm:inline">Top Riesgo</span>
+            </Link>
             <Link href="/alertas" className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Alertas</span>
@@ -117,7 +135,7 @@ export default function Home() {
           />
           <StatCard
             icon={DollarSign}
-            value="$300B+"
+            value={formatMonto(stats.monto_total)}
             valueSuffix="MXN"
             label="Monto Total Analizado"
             sublabel="Gasto federal identificado"
