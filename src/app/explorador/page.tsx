@@ -299,25 +299,27 @@ export default function Explorador() {
                 const conexiones = graphData.links.filter(l => l.source === n.id || l.target === n.id).length;
                 return Math.max(5, Math.min(12, 4 + conexiones * 1.5));
               }}
-              linkColor={() => "rgba(148,163,184,0.2)"}
-              linkWidth={(l: GraphLink) => Math.max(0.5, Math.min(3, Math.log((l.num_contratos || 1) + 1) * 0.8))}
-              linkDirectionalParticles={2}
-              linkDirectionalParticleWidth={1}
-              linkDirectionalParticleSpeed={0.003}
+              linkColor={() => "rgba(148,163,184,0.12)"}
+              linkWidth={(l: GraphLink) => Math.max(0.5, Math.min(2, Math.log((l.num_contratos || 1) + 1) * 0.6))}
               backgroundColor="#0f172a"
               onNodeClick={(n: GraphNode) => handleNodeClick(n)}
-              d3AlphaDecay={0.02}
-              d3VelocityDecay={0.3}
-              warmupTicks={80}
-              cooldownTicks={60}
+              d3AlphaDecay={0.005}
+              d3VelocityDecay={0.15}
+              warmupTicks={150}
+              cooldownTicks={120}
+              onEngineTick={(engine) => {
+                engine.d3Force("charge")?.strength(-400);
+                engine.d3Force("link")?.distance(80).strength(0.3);
+                engine.d3Force("center")?.strength(0.03);
+              }}
               nodeCanvasObjectMode={() => "after"}
               nodeCanvasObject={(node, ctx, globalScale) => {
                 const n = node as GraphNode & { x: number; y: number };
                 const label = n.name.length > 20 ? n.name.slice(0, 18) + "…" : n.name;
-                const fontSize = Math.max(6, Math.min(11, 9 / globalScale));
+                const fontSize = Math.max(6, Math.min(10, 8 / globalScale));
                 const nodeRadius = ((n.val ?? 8) / globalScale);
                 ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
-                ctx.fillStyle = "rgba(255,255,255,0.6)";
+                ctx.fillStyle = "rgba(255,255,255,0.5)";
                 ctx.textAlign = "center";
                 ctx.fillText(label, n.x, n.y + nodeRadius + fontSize + 2);
               }}
