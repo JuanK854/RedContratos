@@ -39,6 +39,14 @@ yarn-error.log*
 # backend data (CSVs procesados, no subir al repo)
 backend/data/
 
+# Documentos y contratos locales (no subir al repo)
+src/documentos-y-contratos/
+documentos-y-contratos/
+
+# Python cache
+__pycache__/
+*.pyc
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
