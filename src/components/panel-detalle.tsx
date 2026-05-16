@@ -38,47 +38,14 @@ interface NodeDetail {
   }[];
 }
 
-const MOCK_DATA: NodeDetail = {
-  name: "EDENRED MEXICO SA DE CV",
-  rfc: "EME980311H54",
-  type: "proveedor",
-  score: 92,
-  totalContratos: 439,
-  montoTotal: "$6.8B MXN",
-  dependencias: 215,
-  pctAdjDirecta: 98,
-  flags: ["Fraccionamiento", "Renovación Espejo", "Empresa Fantasma"],
-  direccion: "No disponible",
-  registrado: "2026-01-15",
-  contratosRecientes: [
-    {
-      num: "CN-2026-000001",
-      dependencia: "Secretaría de Salud",
-      tipo: "Adjudicación Directa",
-      monto: "$5.2M",
-    },
-    {
-      num: "CN-2026-000042",
-      dependencia: "IMSS",
-      tipo: "Adjudicación Directa",
-      monto: "$12.8M",
-    },
-    {
-      num: "CN-2026-000087",
-      dependencia: "BIRMEX",
-      tipo: "Adjudicación Directa",
-      monto: "$3.1M",
-    },
-  ],
-};
-
 interface PanelDetalleProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   data?: NodeDetail;
 }
 
-export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDetalleProps) {
+export function PanelDetalle({ open, onOpenChange, data }: PanelDetalleProps) {
+  if (!data) return null;
   const scoreInfo = getScoreInfo(data.score);
 
   const adjColor =
