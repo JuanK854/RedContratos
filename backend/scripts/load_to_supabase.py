@@ -18,7 +18,9 @@ def main():
     df["monto"] = pd.to_numeric(df["monto"], errors="coerce").fillna(0)
     # Reemplazar NaN con None para que Supabase los acepte como NULL
     df = df.where(pd.notna(df), other=None)
-    print(f"  {len(df):,} filas cargadas")
+    before = len(df)
+    df = df.drop_duplicates(subset=["num_contrato"], keep="first")
+    print(f"  {len(df):,} filas cargadas ({before - len(df):,} duplicados de num_contrato eliminados)")
 
     client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
