@@ -86,11 +86,6 @@ export default function Explorador() {
   const forcesAppliedRef = useRef(false);
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    const rfc = searchParams.get("rfc");
-    if (rfc) loadGraph(rfc);
-  }, [searchParams, loadGraph]);
-
   useLayoutEffect(() => {
     if (!graphRef.current || !graphData || graphData.nodes.length === 0) return;
     const fg = graphRef.current;
@@ -155,6 +150,11 @@ export default function Explorador() {
       setLoadingGraph(false);
     }
   }, []);
+
+  useEffect(() => {
+    const rfc = searchParams.get("rfc");
+    if (rfc) loadGraph(rfc);
+  }, [searchParams, loadGraph]);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
     const nodeLinks = graphData?.links.filter(
