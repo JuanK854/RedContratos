@@ -83,10 +83,13 @@ export default function Explorador() {
     if (!graphRef.current || !graphData || graphData.nodes.length === 0) return;
     
     const fg = graphRef.current;
-    forcesAppliedRef.current = false; // Reset cuando cambian los datos
+    forcesAppliedRef.current = false;
+    
+    const nodeIds = new Set(graphData.nodes.map(n => n.id));
+    const validLinks = graphData.links.filter(l => nodeIds.has(l.source) && nodeIds.has(l.target));
     
     fg.d3Force("charge", forceManyBody().strength(-10000).distanceMax(2000));
-    fg.d3Force("link", forceLink(graphData.links).id((d: any) => d.id).distance(500).strength(0.01));
+    fg.d3Force("link", forceLink(validLinks).id((d: any) => d.id).distance(500).strength(0.01));
     fg.d3Force("center", forceCenter(0, 0).strength(0.003));
     fg.d3Force("collision", forceCollide().radius(120).strength(1));
     fg.d3ReheatSimulation();
@@ -334,8 +337,10 @@ export default function Explorador() {
               onRenderFramePre={() => {
                 if (!forcesAppliedRef.current && graphRef.current && graphData) {
                   const fg = graphRef.current;
+                  const nodeIds = new Set(graphData.nodes.map(n => n.id));
+                  const validLinks = graphData.links.filter(l => nodeIds.has(l.source) && nodeIds.has(l.target));
                   fg.d3Force("charge", forceManyBody().strength(-10000).distanceMax(2000));
-                  fg.d3Force("link", forceLink(graphData.links).id((d: any) => d.id).distance(500).strength(0.01));
+                  fg.d3Force("link", forceLink(validLinks).id((d: any) => d.id).distance(500).strength(0.01));
                   fg.d3Force("center", forceCenter(0, 0).strength(0.003));
                   fg.d3Force("collision", forceCollide().radius(120).strength(1));
                   forcesAppliedRef.current = true;
