@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Search, X, Loader2, Building2, ArrowUp, ArrowDown, CornerDownLeft } from "lucide-react";
 import { API_URL } from "@/lib/config";
 
@@ -36,6 +37,7 @@ function mapBackendResult(r: BackendResult): SearchResult {
 }
 
 export function Buscador() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -86,6 +88,7 @@ export function Buscador() {
     setQuery(result.name);
     setOpen(false);
     setSelectedIndex(-1);
+    router.push(`/explorador?rfc=${encodeURIComponent(result.rfc)}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

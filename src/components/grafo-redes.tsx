@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useMemo, useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { PanelDetalle } from "./panel-detalle";
 import { API_URL } from "@/lib/config";
 
@@ -31,6 +32,10 @@ interface GraphData {
 const DEFAULT_RFC = "ASE930924SS7";
 
 export function GrafoRedes() {
+  const searchParams = useSearchParams();
+  const rfcParam = searchParams.get("rfc");
+  const currentRfc = rfcParam || DEFAULT_RFC;
+
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -63,8 +68,8 @@ export function GrafoRedes() {
   }, []);
 
   useEffect(() => {
-    fetchGraph(DEFAULT_RFC);
-  }, [fetchGraph]);
+    fetchGraph(currentRfc);
+  }, [fetchGraph, currentRfc]);
 
   const nodeColor = useCallback((node: GraphNode) => {
     if (node.flags?.fantasma) return "#22c55e";
@@ -127,7 +132,7 @@ export function GrafoRedes() {
       <div className="flex flex-col items-center justify-center w-full h-full bg-slate-950 gap-4">
         <p className="text-red-400 text-sm">{error}</p>
         <button
-          onClick={() => fetchGraph(DEFAULT_RFC)}
+          onClick={() => fetchGraph(currentRfc)}
           className="text-xs text-slate-400 hover:text-white underline"
         >
           Reintentar
