@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useLayoutEffect, Suspense } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
@@ -60,7 +60,7 @@ interface PanelData {
   flags: string[];
 }
 
-export default function Explorador() {
+function Explorador() {
   // Mobile-first responsive layout v2 - 2026-05-16
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -564,4 +564,12 @@ function LegendBadge({ color, label }: { color: string; label: string }) {
 
 function FlagBadge({ label, title }: { label: string; title: string }) {
   return <span title={title} className="text-sm">{label}</span>;
+}
+
+export default function ExploradorPage() {
+  return (
+    <Suspense fallback={null}>
+      <Explorador />
+    </Suspense>
+  );
 }
