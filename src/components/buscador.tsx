@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, X, Loader2, Building2, User, ArrowUp, ArrowDown, CornerDownLeft } from "lucide-react";
+import { API_URL } from "@/lib/config";
 
 interface SearchResult {
   id: string;
@@ -9,6 +10,26 @@ interface SearchResult {
   rfc: string;
   type: "empresa" | "dependencia";
   description?: string;
+}
+
+interface BackendResult {
+  rfc: string;
+  nombre: string;
+  score: number;
+  flag_fantasma: boolean;
+  flag_fraccionamiento: boolean;
+  flag_espejo: boolean;
+}
+
+function mapBackendResult(r: BackendResult): SearchResult {
+  const flags = [r.flag_fantasma, r.flag_fraccionamiento, r.flag_espejo].filter(Boolean).length;
+  return {
+    id: r.rfc,
+    name: r.nombre,
+    rfc: r.rfc,
+    type: "empresa",
+    description: flags > 0 ? `${flags} alerta${flags > 1 ? "s" : ""} detectada${flags > 1 ? "s" : ""}` : `Score: ${r.score}/100`,
+  };
 }
 
 export function Buscador() {
@@ -33,15 +54,15 @@ export function Buscador() {
     setSelectedIndex(-1);
 
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(q)}`);
       if (res.ok) {
         const data = await res.json();
-        setResults(data.results || []);
+        setResults((data.results || []).map(mapBackendResult));
       } else {
-        setResults(mockSearch(q));
+        setResults([]);
       }
     } catch {
-      setResults(mockSearch(q));
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -153,18 +174,8 @@ export function Buscador() {
                   : "hover:bg-slate-800"
               }`}
             >
-              <div
-                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                  result.type === "empresa"
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "bg-emerald-500/10 text-emerald-400"
-                }`}
-              >
-                {result.type === "empresa" ? (
-                  <Building2 className="h-4 w-4" />
-                ) : (
-                  <User className="h-4 w-4" />
-                )}
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+                <Building2 className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -175,21 +186,13 @@ export function Buscador() {
                   >
                     {result.name}
                   </span>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      result.type === "empresa"
-                        ? "bg-blue-500/10 text-blue-400"
-                        : "bg-emerald-500/10 text-emerald-400"
-                    }`}
-                  >
-                    {result.type === "empresa" ? "Empresa" : "Dependencia"}
+                  <span className="shrink-0 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400">
+                    Empresa
                   </span>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500 truncate">
                   {result.description}
-                  {result.rfc && (
-                    <span className="ml-2 font-mono text-slate-600">RFC: {result.rfc}</span>
-                  )}
+                  <span className="ml-2 font-mono text-slate-600">RFC: {result.rfc}</span>
                 </p>
               </div>
             </button>
@@ -215,74 +218,5 @@ export function Buscador() {
         </div>
       )}
     </div>
-  );
-}
-
-function mockSearch(q: string): SearchResult[] {
-  const all: SearchResult[] = [
-    {
-      id: "1",
-      name: "EDENRED MEXICO SA DE CV",
-      rfc: "EME980311H54",
-      type: "empresa",
-      description: "Servicios de vales de despensa",
-    },
-    {
-      id: "2",
-      name: "GRUPO CONSTRUCTOR ROJAS SA",
-      rfc: "GCR901215AB1",
-      type: "empresa",
-      description: "Construcción e infraestructura",
-    },
-    {
-      id: "3",
-      name: "Secretaría de Salud",
-      rfc: "SSA000101000",
-      type: "dependencia",
-      description: "Gobierno Federal",
-    },
-    {
-      id: "4",
-      name: "TECNOLOGIAS AVANZADAS MX",
-      rfc: "TAM150820QW3",
-      type: "empresa",
-      description: "Desarrollo de software",
-    },
-    {
-      id: "5",
-      name: "IMSS",
-      rfc: "IMS431231ABC",
-      type: "dependencia",
-      description: "Instituto Mexicano del Seguro Social",
-    },
-    {
-      id: "6",
-      name: "ALMACENAJE Y DISTRIBUCION AVIOR SA DE CV",
-      rfc: "ADV180523XY9",
-      type: "empresa",
-      description: "Almacenamiento y logística",
-    },
-    {
-      id: "7",
-      name: "INDAABIN",
-      rfc: "INA000101000",
-      type: "dependencia",
-      description: "Instituto de Administración y Avalúos de Bienes Nacionales",
-    },
-    {
-      id: "8",
-      name: "BIRMEX",
-      rfc: "BIR000101000",
-      type: "dependencia",
-      description: "Laboratorios de Biológicos y Reactivos de México",
-    },
-  ];
-
-  const lower = q.toLowerCase();
-  return all.filter(
-    (r) =>
-      r.name.toLowerCase().includes(lower) ||
-      r.rfc.toLowerCase().includes(lower) ||
-      (r.description && r.description.toLowerCase().includes(lower))
   );
 }
