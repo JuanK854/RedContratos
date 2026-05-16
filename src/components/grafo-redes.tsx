@@ -30,60 +30,33 @@ interface GraphData {
 
 const DEFAULT_RFC = "ASE930924SS7";
 
-const FALLBACK_GRAPH: GraphData = {
-  nodes: [
-    { id: "EME980311H54", name: "EDENRED MEXICO SA DE CV", group: "proveedor", score: 92, val: 20, flags: { fantasma: false, fraccionamiento: true, espejo: true } },
-    { id: "Secretaría de Salud", name: "Secretaría de Salud", group: "institucion", val: 10 },
-    { id: "IMSS", name: "IMSS", group: "institucion", val: 10 },
-    { id: "BIRMEX", name: "BIRMEX", group: "institucion", val: 10 },
-    { id: "SEMAR", name: "SEMAR", group: "institucion", val: 8 },
-    { id: "SEDENA", name: "SEDENA", group: "institucion", val: 8 },
-    { id: "SLY260101XX1", name: "Slycom", group: "proveedor", score: 88, val: 12, flags: { fantasma: true, fraccionamiento: false, espejo: false } },
-    { id: "KOL260315YY2", name: "Kol-Tov", group: "proveedor", score: 85, val: 10, flags: { fantasma: true, fraccionamiento: false, espejo: false } },
-    { id: "AGR850601XX1", name: "AGROASEMEX SA", group: "proveedor", score: 72, val: 14, flags: { fantasma: false, fraccionamiento: false, espejo: false } },
-    { id: "JVC190415ZZ2", name: "JET VAN CAR RENTAL", group: "proveedor", score: 78, val: 11, flags: { fantasma: false, fraccionamiento: false, espejo: false } },
-    { id: "BIA260420ZZ3", name: "Biometría Aplicada", group: "proveedor", score: 90, val: 9, flags: { fantasma: true, fraccionamiento: false, espejo: false } },
-    { id: "SABJ850101XX4", name: "José Safar Boueri", group: "proveedor", score: 82, val: 7, flags: { fantasma: true, fraccionamiento: false, espejo: false } },
-    { id: "INDAABIN", name: "INDAABIN", group: "institucion", val: 9 },
-  ],
-  links: [
-    { source: "EME980311H54", target: "Secretaría de Salud", num_contratos: 45, monto_total: 1250000000 },
-    { source: "EME980311H54", target: "IMSS", num_contratos: 32, monto_total: 890000000 },
-    { source: "EME980311H54", target: "BIRMEX", num_contratos: 28, monto_total: 650000000 },
-    { source: "EME980311H54", target: "SEMAR", num_contratos: 15, monto_total: 320000000 },
-    { source: "EME980311H54", target: "SEDENA", num_contratos: 12, monto_total: 280000000 },
-    { source: "SLY260101XX1", target: "BIRMEX", num_contratos: 8, monto_total: 450000000 },
-    { source: "SLY260101XX1", target: "Secretaría de Salud", num_contratos: 4, monto_total: 180000000 },
-    { source: "KOL260315YY2", target: "IMSS", num_contratos: 6, monto_total: 320000000 },
-    { source: "KOL260315YY2", target: "BIRMEX", num_contratos: 3, monto_total: 150000000 },
-    { source: "AGR850601XX1", target: "Secretaría de Salud", num_contratos: 38, monto_total: 1100000000 },
-    { source: "AGR850601XX1", target: "SEMAR", num_contratos: 22, monto_total: 580000000 },
-    { source: "JVC190415ZZ2", target: "SEDENA", num_contratos: 18, monto_total: 920000000 },
-    { source: "JVC190415ZZ2", target: "SEMAR", num_contratos: 12, monto_total: 640000000 },
-    { source: "BIA260420ZZ3", target: "BIRMEX", num_contratos: 5, monto_total: 280000000 },
-    { source: "SABJ850101XX4", target: "INDAABIN", num_contratos: 3, monto_total: 95000000 },
-    { source: "SABJ850101XX4", target: "Secretaría de Salud", num_contratos: 2, monto_total: 45000000 },
-  ],
-};
-
 export function GrafoRedes() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchGraph = useCallback(async (rfc: string) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`${API_URL}/graph?rfc=${encodeURIComponent(rfc)}`);
       if (res.ok) {
         const data = await res.json();
-        setGraphData(data);
+        if (data.nodes && data.nodes.length > 0) {
+          setGraphData(data);
+        } else {
+          setError("No se encontraron conexiones para este proveedor");
+          setGraphData({ nodes: [], links: [] });
+        }
       } else {
-        setGraphData(FALLBACK_GRAPH);
+        setError("Error al cargar el grafo");
+        setGraphData({ nodes: [], links: [] });
       }
     } catch {
-      setGraphData(FALLBACK_GRAPH);
+      setError("No se pudo conectar con el servidor");
+      setGraphData({ nodes: [], links: [] });
     } finally {
       setLoading(false);
     }
@@ -145,6 +118,28 @@ export function GrafoRedes() {
     return (
       <div className="flex items-center justify-center w-full h-full bg-slate-950">
         <div className="text-slate-500 text-sm">Cargando grafo...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full bg-slate-950 gap-4">
+        <p className="text-red-400 text-sm">{error}</p>
+        <button
+          onClick={() => fetchGraph(DEFAULT_RFC)}
+          className="text-xs text-slate-400 hover:text-white underline"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  if (graphData.nodes.length === 0) {
+    return (
+      <div className="flex items-center justify-center w-full h-full bg-slate-950">
+        <p className="text-slate-500 text-sm">Sin datos para mostrar</p>
       </div>
     );
   }

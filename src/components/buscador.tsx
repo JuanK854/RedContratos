@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, X, Loader2, Building2, User, ArrowUp, ArrowDown, CornerDownLeft } from "lucide-react";
+import { Search, X, Loader2, Building2, ArrowUp, ArrowDown, CornerDownLeft } from "lucide-react";
 import { API_URL } from "@/lib/config";
 
 interface SearchResult {
   id: string;
   name: string;
   rfc: string;
-  type: "empresa" | "dependencia";
-  description?: string;
+  score: number;
+  flags: string[];
 }
 
 interface BackendResult {
@@ -22,13 +22,16 @@ interface BackendResult {
 }
 
 function mapBackendResult(r: BackendResult): SearchResult {
-  const flags = [r.flag_fantasma, r.flag_fraccionamiento, r.flag_espejo].filter(Boolean).length;
+  const flags: string[] = [];
+  if (r.flag_fantasma) flags.push("Empresa Fantasma");
+  if (r.flag_fraccionamiento) flags.push("Fraccionamiento");
+  if (r.flag_espejo) flags.push("Contrato Espejo");
   return {
     id: r.rfc,
     name: r.nombre,
     rfc: r.rfc,
-    type: "empresa",
-    description: flags > 0 ? `${flags} alerta${flags > 1 ? "s" : ""} detectada${flags > 1 ? "s" : ""}` : `Score: ${r.score}/100`,
+    score: r.score,
+    flags,
   };
 }
 
@@ -59,10 +62,10 @@ export function Buscador() {
         const data = await res.json();
         setResults((data.results || []).map(mapBackendResult));
       } else {
-        setResults(mockSearchFallback(q));
+        setResults([]);
       }
     } catch {
-      setResults(mockSearchFallback(q));
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -169,9 +172,7 @@ export function Buscador() {
               onClick={() => handleSelect(result)}
               onMouseEnter={() => setSelectedIndex(index)}
               className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${
-                index === selectedIndex
-                  ? "bg-slate-800"
-                  : "hover:bg-slate-800"
+                index === selectedIndex ? "bg-slate-800" : "hover:bg-slate-800"
               }`}
             >
               <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
@@ -186,12 +187,14 @@ export function Buscador() {
                   >
                     {result.name}
                   </span>
-                  <span className="shrink-0 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400">
-                    Empresa
-                  </span>
+                  {result.flags.length > 0 && (
+                    <span className="shrink-0 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-400">
+                      {result.flags.length} alerta{result.flags.length > 1 ? "s" : ""}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500 truncate">
-                  {result.description}
+                  Score: {result.score}/100
                   <span className="ml-2 font-mono text-slate-600">RFC: {result.rfc}</span>
                 </p>
               </div>
@@ -217,29 +220,12 @@ export function Buscador() {
           </div>
         </div>
       )}
+
+      {open && query && !loading && results.length === 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50 z-50 px-4 py-6 text-center">
+          <p className="text-sm text-slate-400">No se encontraron resultados para "{query}"</p>
+        </div>
+      )}
     </div>
   );
-}
-
-const FALLBACK_DATA: BackendResult[] = [
-  { rfc: "EME980311H54", nombre: "EDENRED MEXICO SA DE CV", score: 92, flag_fantasma: false, flag_fraccionamiento: true, flag_espejo: true },
-  { rfc: "AGR850601XX1", nombre: "AGROASEMEX SA", score: 72, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "SLY260101XX1", nombre: "Slycom", score: 88, flag_fantasma: true, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "KOL260315YY2", nombre: "Kol-Tov", score: 85, flag_fantasma: true, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "BIA260420ZZ3", nombre: "Biometría Aplicada", score: 90, flag_fantasma: true, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "SSA000101000", nombre: "Secretaría de Salud", score: 35, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "IMS431231ABC", nombre: "IMSS", score: 28, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "INA000101000", nombre: "INDAABIN", score: 55, flag_fantasma: false, flag_fraccionamiento: true, flag_espejo: false },
-  { rfc: "BIR000101000", nombre: "BIRMEX", score: 45, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "SED000101000", nombre: "SEDENA", score: 32, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "SEM000101000", nombre: "SEMAR", score: 30, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "JVC190415ZZ2", nombre: "JET VAN CAR RENTAL", score: 78, flag_fantasma: false, flag_fraccionamiento: false, flag_espejo: false },
-  { rfc: "SABJ850101XX4", nombre: "José Safar Boueri", score: 82, flag_fantasma: true, flag_fraccionamiento: false, flag_espejo: false },
-];
-
-function mockSearchFallback(q: string): SearchResult[] {
-  const lower = q.toLowerCase();
-  return FALLBACK_DATA
-    .filter((r) => r.nombre.toLowerCase().includes(lower) || r.rfc.toLowerCase().includes(lower))
-    .map(mapBackendResult);
 }
