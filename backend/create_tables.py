@@ -23,9 +23,9 @@ def check_tables():
     for table in tables:
         try:
             result = client.table(table).select("*").limit(1).execute()
-            print(f"  ✓ {table} — ok")
+            print(f"  [OK] {table}")
         except Exception as e:
-            print(f"  ✗ {table} — {e}")
+            print(f"  [FAIL] {table} — {e}")
 
 if __name__ == "__main__":
     print("Conectando a Supabase...")
