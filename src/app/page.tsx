@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, Network, Bell, BarChart3, Shield, ArrowRight } from "lucide-react";
+import { Search, Network, Bell, BarChart3, Shield, ArrowRight, FileText, DollarSign, AlertTriangle } from "lucide-react";
 
 export default function Home() {
   return (
@@ -102,16 +102,20 @@ export default function Home() {
       <section className="mx-auto max-w-5xl px-6 pb-24">
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard
+            icon={FileText}
             value="34,486"
             label="Total de Contratos"
             sublabel="Dataset CompraNet 2026"
           />
           <StatCard
-            value="$300B+ MXN"
+            icon={DollarSign}
+            value="$300B+"
+            valueSuffix="MXN"
             label="Monto Total Analizado"
             sublabel="Gasto federal identificado"
           />
           <StatCard
+            icon={AlertTriangle}
             value="76%"
             label="Adjudicaciones Directas"
             sublabel="Contratos otorgados sin licitación"
@@ -124,20 +128,28 @@ export default function Home() {
 }
 
 function StatCard({
+  icon: Icon,
   value,
+  valueSuffix,
   label,
   sublabel,
   highlight,
 }: {
+  icon: typeof FileText;
   value: string;
+  valueSuffix?: string;
   label: string;
   sublabel: string;
   highlight?: boolean;
 }) {
   return (
     <div className="group rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-all hover:border-red-500/50 hover:bg-slate-900">
+      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800">
+        <Icon className={`h-5 w-5 ${highlight ? "text-red-400" : "text-slate-400"}`} />
+      </div>
       <p className={`text-5xl font-bold tracking-tight ${highlight ? "text-red-500" : "text-white"}`}>
         {value}
+        {valueSuffix && <span className="ml-1 text-2xl text-slate-500">{valueSuffix}</span>}
       </p>
       <p className="mt-2 text-sm font-medium text-slate-300">{label}</p>
       <p className="mt-1 text-xs text-slate-500">{sublabel}</p>
