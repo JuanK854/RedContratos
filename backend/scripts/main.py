@@ -103,7 +103,7 @@ def search_proveedores(q: str = ""):
         # Seleccionamos solo los datos clave para que el frontend arme la lista rápida
         response = (
             supabase.table("proveedores")
-            .select("rfc, nombre, score, flag_fantasma, flag_fraccionamiento, flag_espejo")
+            .select("rfc, nombre, score, total_contratos, flag_fantasma, flag_fraccionamiento, flag_espejo")
             .or_(f"nombre.ilike.%{q}%,rfc.ilike.%{q}%")
             .order("score", desc=True)  # Ordenamos para que los más sospechosos salgan arriba
             .limit(15)
