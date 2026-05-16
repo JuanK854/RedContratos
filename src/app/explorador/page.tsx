@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus } from "lucide-react";
+import { Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus } from "lucide-react";
+import { Buscador } from "@/components/buscador";
 
 export default function Home() {
   return (
@@ -19,17 +20,7 @@ export default function Home() {
 
         {/* Search */}
         <div className="flex-1 max-w-2xl mx-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Buscar RFC, empresa o dependencia (Ej. EDENRED)"
-              className="w-full h-9 pl-10 pr-16 rounded-lg bg-slate-900 border border-white/10 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
-            />
-            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-500 bg-slate-800 border border-white/10">
-              ⌘K
-            </kbd>
-          </div>
+          <Buscador />
         </div>
 
         {/* Live Badge */}
