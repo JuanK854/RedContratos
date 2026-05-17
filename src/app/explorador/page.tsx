@@ -430,10 +430,13 @@ function Explorador() {
               cooldownTicks={100} 
               
               nodePointerAreaPaint={(node: any, color: string, ctx: any) => {
-                const r = (node.val ?? 6) * 10;
+                // Área táctil precisa: Tamaño real del nodo + 4px de margen para el dedo
+                const isCentral = node.id === activeRfc;
+                const baseRadius = isCentral ? 10 : (node.group === "proveedor" ? 6 : 4);
+                
                 ctx.fillStyle = color;
                 ctx.beginPath();
-                ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
+                ctx.arc(node.x, node.y, baseRadius + 4, 0, 2 * Math.PI);
                 ctx.fill();
               }}
              nodeCanvasObjectMode={() => "replace"}
