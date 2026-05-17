@@ -12,6 +12,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 ZAVU_API_KEY = os.environ.get("ZAVU_API_KEY", "")
 ZAVU_TELEGRAM_TO = os.environ.get("ZAVU_TELEGRAM_TO", "")
+ZAVU_SENDER_ID = os.environ.get("ZAVU_SENDER_ID", "")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("Error: Faltan las variables de entorno SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY")
@@ -257,8 +258,8 @@ def get_alertas():
 
 def _enviar_telegram(nombre: str, rfc: str, score: int, tipos_fraude: list[str], monto: float) -> dict:
     """Envía una alerta por Telegram vía Zavu para un proveedor con score alto."""
-    if not ZAVU_API_KEY or not ZAVU_TELEGRAM_TO:
-        return {"ok": False, "error": "ZAVU_API_KEY o ZAVU_TELEGRAM_TO no configurados"}
+    if not ZAVU_API_KEY or not ZAVU_TELEGRAM_TO or not ZAVU_SENDER_ID:
+        return {"ok": False, "error": "ZAVU_API_KEY, ZAVU_TELEGRAM_TO o ZAVU_SENDER_ID no configurados"}
 
     tipos_str = ", ".join(tipos_fraude) if tipos_fraude else "Sin clasificar"
     monto_str = (
@@ -280,7 +281,7 @@ def _enviar_telegram(nombre: str, rfc: str, score: int, tipos_fraude: list[str],
         resp = http_requests.post(
             ZAVU_URL,
             json={"to": ZAVU_TELEGRAM_TO, "channel": "telegram", "text": mensaje},
-            headers={"Authorization": f"Bearer {ZAVU_API_KEY}", "Content-Type": "application/json"},
+            headers={"Authorization": f"Bearer {ZAVU_API_KEY}", "Content-Type": "application/json", "Zavu-Sender": ZAVU_SENDER_ID},
             timeout=10,
         )
         return {"ok": resp.status_code < 300, "status": resp.status_code, "body": resp.text}

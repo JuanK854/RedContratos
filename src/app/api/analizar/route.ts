@@ -22,15 +22,16 @@ function formatMonto(n: number): string {
 export async function POST() {
   const apiKey = process.env.ZAVU_API_KEY;
   const telegramTo = process.env.ZAVU_TELEGRAM_TO;
+  const senderId = process.env.ZAVU_SENDER_ID;
 
-  if (!apiKey || !telegramTo) {
+  if (!apiKey || !telegramTo || !senderId) {
     return Response.json(
-      { error: "ZAVU_API_KEY o ZAVU_TELEGRAM_TO no configurados" },
+      { error: "ZAVU_API_KEY, ZAVU_TELEGRAM_TO o ZAVU_SENDER_ID no configurados" },
       { status: 500 }
     );
   }
 
-  const zavu = new Zavu({ apiKey });
+  const zavu = new Zavu({ apiKey, defaultHeaders: { "Zavu-Sender": senderId } });
 
   const alertasRes = await fetch(`${API_URL}/alertas`);
   if (!alertasRes.ok) {
