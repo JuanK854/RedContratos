@@ -8,7 +8,6 @@ import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus, Men
 import { PanelDetalle } from "@/components/panel-detalle";
 import { ScoreBadge } from "@/components/score-badge";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { forceManyBody, forceLink, forceCenter, forceCollide } from "d3-force";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
@@ -86,52 +85,13 @@ function Explorador() {
   const forcesAppliedRef = useRef(false);
   const searchParams = useSearchParams();
 
-<<<<<<< HEAD
-  const loadGraph = useCallback(async (rfc: string) => {
-    setResults([]);
-    setActiveRfc(rfc);
-    setLoadingGraph(true);
-    try {
-      const res = await fetch(`${API}/graph?rfc=${encodeURIComponent(rfc)}`);
-      const data = await res.json();
-      if (data.nodes && data.nodes.length > 0) {
-        setGraphData(data);
-      } else {
-        setGraphData(null);
-      }
-    } catch {
-      setGraphData(null);
-    } finally {
-      setLoadingGraph(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const rfc = searchParams.get("rfc");
-    if (rfc) loadGraph(rfc);
-  }, [searchParams, loadGraph]);
-
-
-  useLayoutEffect(() => {
-    if (!graphRef.current || !graphData || graphData.nodes.length === 0) return;
-    const fg = graphRef.current;
-    forcesAppliedRef.current = false;
-    const nodeIds = new Set(graphData.nodes.map(n => n.id));
-    const validLinks = graphData.links.filter(l => nodeIds.has(l.source) && nodeIds.has(l.target));
-    fg.d3Force("charge", forceManyBody().strength(-10000).distanceMax(2000));
-    fg.d3Force("link", forceLink(validLinks).id((d: any) => d.id).distance(500).strength(0.01));
-    fg.d3Force("center", forceCenter(0, 0).strength(0.003));
-    fg.d3Force("collision", forceCollide().radius(120).strength(1));
-    fg.d3ReheatSimulation();
-=======
- // Nueva física estable (reemplaza al useLayoutEffect anterior)
+  // Nueva física estable (reemplaza al useLayoutEffect anterior)
   useEffect(() => {
     if (graphRef.current && graphData) {
       // Configuramos las fuerzas nativas sin sobrescribir las instancias de D3
       graphRef.current.d3Force('charge').strength(-400).distanceMax(800);
       graphRef.current.d3Force('link').distance(100);
     }
->>>>>>> saul
   }, [graphData]);
 
   const searchProveedores = useCallback(async (q: string) => {
@@ -167,14 +127,6 @@ function Explorador() {
     if (e.key === "Escape") setResults([]);
   };
 
-<<<<<<< HEAD
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    const nodeLinks = graphData?.links.filter((l) => {
-      const src = (l.source as any)?.id ?? l.source;
-      const tgt = (l.target as any)?.id ?? l.target;
-      return src === node.id || tgt === node.id;
-    }) ?? [];
-=======
   const loadGraph = useCallback(async (rfc: string) => {
     setResults([]);
     setActiveRfc(rfc);
@@ -210,7 +162,6 @@ function Explorador() {
       return sourceId === node.id || targetId === node.id;
     }) ?? [];
 
->>>>>>> saul
     const totalMonto = nodeLinks.reduce((sum, l) => sum + (l.monto_total || 0), 0);
     
     const formatMonto = (n: number) => {
@@ -606,7 +557,6 @@ function LegendBadge({ color, label }: { color: string; label: string }) {
 
 function FlagBadge({ label, title }: { label: string; title: string }) {
   return <span title={title} className="text-sm">{label}</span>;
-<<<<<<< HEAD
 }
 
 export default function ExploradorPage() {
@@ -616,6 +566,3 @@ export default function ExploradorPage() {
     </Suspense>
   );
 }
-=======
-}
->>>>>>> saul

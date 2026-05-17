@@ -6,16 +6,11 @@ import {
   SheetContent,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ScoreBadge, getScoreInfo } from "@/components/score-badge";
 import {
   FileText,
   DollarSign,
-  MapPin,
-  Users,
-  Calendar,
-  ExternalLink,
   Sparkles,
   Network
 } from "lucide-react";
@@ -30,18 +25,8 @@ interface NodeDetail {
   dependencias: number;
   pctAdjDirecta: number;
   flags: string[];
-  direccion?: string;
-  registrado?: string;
-  contratosRecientes?: {
-    num: string;
-    dependencia: string;
-    tipo: string;
-    monto: string;
-  }[];
 }
 
-<<<<<<< HEAD
-=======
 const MOCK_DATA: NodeDetail = {
   name: "EDENRED MEXICO SA DE CV",
   rfc: "EME980311H54",
@@ -52,19 +37,15 @@ const MOCK_DATA: NodeDetail = {
   dependencias: 215,
   pctAdjDirecta: 98,
   flags: ["Fraccionamiento", "Renovación Espejo", "Empresa Fantasma"],
-  direccion: "No disponible",
-  registrado: "2026-01-15",
 };
 
->>>>>>> saul
 interface PanelDetalleProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   data?: NodeDetail;
 }
 
-export function PanelDetalle({ open, onOpenChange, data }: PanelDetalleProps) {
-  if (!data) return null;
+export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDetalleProps) {
   const scoreInfo = getScoreInfo(data.score);
 
   const adjColor =
@@ -120,7 +101,7 @@ export function PanelDetalle({ open, onOpenChange, data }: PanelDetalleProps) {
             <p className="mt-2 text-xs text-slate-500">{adjLabel}</p>
           </div>
 
-          {/* Información de la Entidad (ACTUALIZADO PARA DATOS REALES) */}
+          {/* Información de la Entidad (Datos Reales) */}
           <div>
             <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
               Detalles de la Red
@@ -135,7 +116,7 @@ export function PanelDetalle({ open, onOpenChange, data }: PanelDetalleProps) {
                 <p className="text-sm text-slate-300">{data.dependencias} instituciones vinculadas</p>
               </div>
               
-              {/* Solo mostramos las banderas si tiene al menos una */}
+              {/* Banderas de Riesgo */}
               {data.flags && data.flags.length > 0 && (
                 <div>
                   <p className="text-xs text-slate-500 mb-2">Banderas de Riesgo Detectadas</p>
@@ -152,9 +133,9 @@ export function PanelDetalle({ open, onOpenChange, data }: PanelDetalleProps) {
           </div>
         </div>
 
-       {/* Footer Restaurado (Solución a prueba de TypeScript) */}
+        {/* Footer (Sin errores de TypeScript en los botones) */}
         <div className="border-t border-white/10 px-6 py-4 flex gap-2">
-          {/* Botón original: Ver Todos los Contratos */}
+          {/* Enlace al Historial de Contratos */}
           <Link 
             href={`/contratos/${data.rfc}`}
             className="flex-1 inline-flex items-center justify-center rounded-md border border-red-500/50 bg-transparent px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
@@ -163,7 +144,7 @@ export function PanelDetalle({ open, onOpenChange, data }: PanelDetalleProps) {
             Ver Todos
           </Link>
 
-          {/* Botón que lleva a la página de Análisis de IA (Caso) */}
+          {/* Enlace al Análisis con IA de Dev D */}
           <Link 
             href={`/caso/${data.rfc}`}
             className="flex-1 inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 transition-colors shadow-sm"
