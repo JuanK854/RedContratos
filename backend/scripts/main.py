@@ -347,7 +347,7 @@ def get_contratos_proveedor(rfc: str):
     try:
         response = (
             supabase.table("contratos")
-            .select("num_contrato, institucion, tipo_procedimiento, monto, fecha_inicio")
+            .select("num_contrato, institucion, tipo_procedimiento, monto, fecha_inicio, fecha_fin")
             .eq("rfc", rfc)  
             .order("fecha_inicio", desc=True)
             .execute()

@@ -72,47 +72,56 @@ export default function ContratosPage() {
                 <th className="px-6 py-4 font-medium">Institución</th>
                 <th className="px-6 py-4 font-medium">Procedimiento</th>
                 <th className="px-6 py-4 font-medium">Fecha de Inicio</th>
+                <th className="px-6 py-4 font-medium">Fecha de Fin</th> {/* NUEVA COLUMNA */}
                 <th className="px-6 py-4 font-medium text-right">Monto (MXN)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {contratos.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                     No se encontraron contratos para este RFC o el endpoint no está disponible.
                   </td>
                 </tr>
               ) : (
                 contratos.map((c: any, i: number) => (
                   <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                    {/* Columna 1: ID del Contrato (Corregido a num_contrato) */}
+                    {/* ID del Contrato */}
                     <td className="px-6 py-4 font-mono text-xs text-slate-400">
                       {c.num_contrato || "SIN CÓDIGO"}
                     </td>
                     
-                    {/* Columna 2: Institución */}
+                    {/* Institución */}
                     <td className="px-6 py-4 font-medium text-slate-200">
                       <div className="max-w-xs truncate" title={c.institucion}>
                         {c.institucion}
                       </div>
                     </td>
                     
-                    {/* Columna 3: Procedimiento (Con escudo para nulls) */}
+                    {/* Procedimiento */}
                     <td className="px-6 py-4">
                       <span className="inline-flex max-w-[200px] truncate rounded-full bg-slate-800/80 px-2.5 py-1 text-[10px] text-slate-300 border border-white/10" title={c.tipo_procedimiento || "NO ESPECIFICADO"}>
                         {c.tipo_procedimiento || "NO ESPECIFICADO"}
                       </span>
                     </td>
 
-                    {/* Columna 4: Fecha de Inicio (NUEVA) */}
+                    {/* Fecha de Inicio */}
                     <td className="px-6 py-4 text-slate-300">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3 h-3 text-slate-500" />
                         {c.fecha_inicio || "N/A"}
                       </div>
                     </td>
+
+                    {/* Fecha de Fin (NUEVA CELDA) */}
+                    <td className="px-6 py-4 text-slate-300">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3 text-slate-500" />
+                        {c.fecha_fin || "N/A"}
+                      </div>
+                    </td>
                     
-                    {/* Columna 5: Monto */}
+                    {/* Monto */}
                     <td className="px-6 py-4 font-semibold text-white text-right">
                       ${Number(c.monto || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
