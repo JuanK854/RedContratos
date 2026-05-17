@@ -156,9 +156,11 @@ export default function Explorador() {
   };
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    const nodeLinks = graphData?.links.filter(
-      (l) => l.source === node.id || l.target === node.id
-    ) ?? [];
+    const nodeLinks = graphData?.links.filter((l) => {
+      const src = (l.source as any)?.id ?? l.source;
+      const tgt = (l.target as any)?.id ?? l.target;
+      return src === node.id || tgt === node.id;
+    }) ?? [];
     const totalMonto = nodeLinks.reduce((sum, l) => sum + (l.monto_total || 0), 0);
 
     const formatMonto = (n: number) => {
