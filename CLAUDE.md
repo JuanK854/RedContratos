@@ -277,6 +277,7 @@ Al presentar el domingo, el flujo ideal es:
 ## 📝 Notas Importantes para el Asistente
 
 ### Reglas de Git
+- **Al iniciar cada sesión**, verificar que las credenciales de git sean las correctas con `git config user.name` y `git config user.email`. Las credenciales correctas son `alexitogama` y `alejandrogarciamarquez1105@gmail.com`.
 - **Antes de cualquier push a main**, hacer `git fetch origin && git log HEAD..origin/main --oneline` para verificar si hay commits nuevos. Si los hay, hacer pull primero para evitar conflictos.
 
 - El equipo usa **React / Next.js** como stack principal y nivel **intermedio**
