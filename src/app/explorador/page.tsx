@@ -439,6 +439,7 @@ function Explorador() {
                 ctx.arc(node.x, node.y, baseRadius + 4, 0, 2 * Math.PI);
                 ctx.fill();
               }}
+            enableNodeDrag={false}
              nodeCanvasObjectMode={() => "replace"}
               nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
                 const isCentral = node.id === activeRfc;
