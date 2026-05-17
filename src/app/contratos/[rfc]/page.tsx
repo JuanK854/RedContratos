@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText, Calendar } from "lucide-react";
 
 // Apuntando a tu backend en Railway
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://web-production-bb601f.up.railway.app";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://redcontratos-production.up.railway.app";
 
 export default function ContratosPage() {
   const params = useParams();
@@ -65,34 +65,56 @@ export default function ContratosPage() {
       {/* Tabla de Datos */}
       <div className="rounded-xl border border-white/10 bg-slate-900/50 overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
               <tr>
-                <th className="px-6 py-4 font-medium">ID Contrato / Código</th>
+                <th className="px-6 py-4 font-medium">ID / Código</th>
                 <th className="px-6 py-4 font-medium">Institución</th>
                 <th className="px-6 py-4 font-medium">Procedimiento</th>
+                <th className="px-6 py-4 font-medium">Fecha de Inicio</th>
                 <th className="px-6 py-4 font-medium text-right">Monto (MXN)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {contratos.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                     No se encontraron contratos para este RFC o el endpoint no está disponible.
                   </td>
                 </tr>
               ) : (
                 contratos.map((c: any, i: number) => (
                   <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs text-slate-400">{c.id_contrato}</td>
-                    <td className="px-6 py-4 font-medium text-slate-200">{c.institucion}</td>
+                    {/* Columna 1: ID del Contrato (Corregido a num_contrato) */}
+                    <td className="px-6 py-4 font-mono text-xs text-slate-400">
+                      {c.num_contrato || "SIN CÓDIGO"}
+                    </td>
+                    
+                    {/* Columna 2: Institución */}
+                    <td className="px-6 py-4 font-medium text-slate-200">
+                      <div className="max-w-xs truncate" title={c.institucion}>
+                        {c.institucion}
+                      </div>
+                    </td>
+                    
+                    {/* Columna 3: Procedimiento (Con escudo para nulls) */}
                     <td className="px-6 py-4">
-                      <span className="inline-flex rounded-full bg-slate-800/80 px-2.5 py-1 text-[10px] text-slate-300 border border-white/10">
-                        {c.tipo_procedimiento}
+                      <span className="inline-flex max-w-[200px] truncate rounded-full bg-slate-800/80 px-2.5 py-1 text-[10px] text-slate-300 border border-white/10" title={c.tipo_procedimiento || "NO ESPECIFICADO"}>
+                        {c.tipo_procedimiento || "NO ESPECIFICADO"}
                       </span>
                     </td>
+
+                    {/* Columna 4: Fecha de Inicio (NUEVA) */}
+                    <td className="px-6 py-4 text-slate-300">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3 text-slate-500" />
+                        {c.fecha_inicio || "N/A"}
+                      </div>
+                    </td>
+                    
+                    {/* Columna 5: Monto */}
                     <td className="px-6 py-4 font-semibold text-white text-right">
-                      ${Number(c.monto || 0).toLocaleString('es-MX')}
+                      ${Number(c.monto || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))
