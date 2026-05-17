@@ -19,15 +19,24 @@ function formatMonto(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   const apiKey = process.env.ZAVU_API_KEY;
-  const telegramTo = process.env.ZAVU_TELEGRAM_TO;
   const senderId = process.env.ZAVU_SENDER_ID;
 
-  if (!apiKey || !telegramTo || !senderId) {
+  if (!apiKey || !senderId) {
     return Response.json(
-      { error: "ZAVU_API_KEY, ZAVU_TELEGRAM_TO o ZAVU_SENDER_ID no configurados" },
+      { error: "ZAVU_API_KEY o ZAVU_SENDER_ID no configurados" },
       { status: 500 }
+    );
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const telegramTo = body.telegram_id || process.env.ZAVU_TELEGRAM_TO;
+
+  if (!telegramTo) {
+    return Response.json(
+      { error: "Se requiere un ID de Telegram" },
+      { status: 400 }
     );
   }
 

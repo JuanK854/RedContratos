@@ -66,12 +66,18 @@ export default function AlertasPage() {
   const [tabActivo, setTabActivo] = useState<TipoAlerta | "Todas">("Todas");
   const [analizando, setAnalizando] = useState(false);
   const [resultadoAnalisis, setResultadoAnalisis] = useState<{ enviadas: number; total: number; mensaje: string } | null>(null);
+  const [telegramId, setTelegramId] = useState("");
 
   const ejecutarAnalisis = async () => {
+    if (!telegramId.trim()) return;
     setAnalizando(true);
     setResultadoAnalisis(null);
     try {
-      const res = await fetch("/api/analizar", { method: "POST" });
+      const res = await fetch("/api/analizar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegram_id: telegramId.trim() }),
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setResultadoAnalisis({ enviadas: data.alertas_enviadas, total: data.total_detectados, mensaje: data.mensaje });
@@ -147,9 +153,21 @@ export default function AlertasPage() {
 
           {/* Botón analizar + feedback */}
           <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+            <div className="flex flex-col gap-1 w-full sm:w-auto">
+              <input
+                type="text"
+                value={telegramId}
+                onChange={(e) => setTelegramId(e.target.value)}
+                placeholder="Tu ID de Telegram (ej. 8762288392)"
+                className="h-9 rounded-lg bg-slate-900 border border-white/10 px-3 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-red-600 focus:border-red-600 transition-all w-full sm:w-64"
+              />
+              <p className="text-[10px] text-slate-500">
+                Obtén tu ID en Telegram con <span className="font-mono text-slate-400">@getmyid_bot</span> · Inicia <span className="font-mono text-slate-400">@RedContratos_Bot</span> primero
+              </p>
+            </div>
             <button
               onClick={ejecutarAnalisis}
-              disabled={analizando}
+              disabled={analizando || !telegramId.trim()}
               className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
             >
               {analizando
