@@ -250,9 +250,7 @@ def get_alertas():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al cargar las alertas: {str(e)}")
 
-<<<<<<< HEAD
 
-# --- HELPER ZAVU ---
 
 def _enviar_telegram(nombre: str, rfc: str, score: int, tipos_fraude: list[str], monto: float) -> dict:
     """Envía una alerta por Telegram vía Zavu para un proveedor con score alto."""
@@ -342,7 +340,6 @@ def analizar_y_alertar():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al ejecutar análisis: {str(e)}")
-=======
         
 @app.get("/contratos/{rfc}")
 def get_contratos_proveedor(rfc: str):
@@ -358,4 +355,3 @@ def get_contratos_proveedor(rfc: str):
         return {"proveedor": rfc, "contratos": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener contratos: {str(e)}")
->>>>>>> saul
