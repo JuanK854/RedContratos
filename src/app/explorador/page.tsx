@@ -37,8 +37,8 @@ interface GraphNode {
 }
 
 interface GraphLink {
-  source: string;
-  target: string;
+  source: string | any; 
+  target: string | any;
   num_contratos: number;
   monto_total: number;
 }
@@ -86,6 +86,7 @@ function Explorador() {
   const forcesAppliedRef = useRef(false);
   const searchParams = useSearchParams();
 
+<<<<<<< HEAD
   const loadGraph = useCallback(async (rfc: string) => {
     setResults([]);
     setActiveRfc(rfc);
@@ -122,6 +123,15 @@ function Explorador() {
     fg.d3Force("center", forceCenter(0, 0).strength(0.003));
     fg.d3Force("collision", forceCollide().radius(120).strength(1));
     fg.d3ReheatSimulation();
+=======
+ // Nueva física estable (reemplaza al useLayoutEffect anterior)
+  useEffect(() => {
+    if (graphRef.current && graphData) {
+      // Configuramos las fuerzas nativas sin sobrescribir las instancias de D3
+      graphRef.current.d3Force('charge').strength(-400).distanceMax(800);
+      graphRef.current.d3Force('link').distance(100);
+    }
+>>>>>>> saul
   }, [graphData]);
 
   const searchProveedores = useCallback(async (q: string) => {
@@ -157,19 +167,59 @@ function Explorador() {
     if (e.key === "Escape") setResults([]);
   };
 
+<<<<<<< HEAD
   const handleNodeClick = useCallback((node: GraphNode) => {
     const nodeLinks = graphData?.links.filter((l) => {
       const src = (l.source as any)?.id ?? l.source;
       const tgt = (l.target as any)?.id ?? l.target;
       return src === node.id || tgt === node.id;
     }) ?? [];
+=======
+  const loadGraph = useCallback(async (rfc: string) => {
+    setResults([]);
+    setActiveRfc(rfc);
+    setLoadingGraph(true);
+    try {
+      const res = await fetch(`${API}/graph?rfc=${encodeURIComponent(rfc)}`);
+      const data = await res.json();
+      if (data.nodes && data.nodes.length > 0) {
+        // 🛡️ EL ESCUDO: Eliminar links hacia nodos fantasma antes de dárselos a D3
+        const nodeIds = new Set(data.nodes.map((n: any) => n.id));
+        data.links = data.links.filter((l: any) => nodeIds.has(l.source) && nodeIds.has(l.target));
+        
+        setGraphData(data);
+      } else {
+        setGraphData(null);
+      }
+    } catch {
+      setGraphData(null);
+    } finally {
+      setLoadingGraph(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const rfc = searchParams.get("rfc");
+    if (rfc) loadGraph(rfc);
+  }, [searchParams, loadGraph]);
+
+  const handleNodeClick = useCallback((node: GraphNode) => {
+    const nodeLinks = graphData?.links.filter((l: any) => {
+      const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+      const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+      return sourceId === node.id || targetId === node.id;
+    }) ?? [];
+
+>>>>>>> saul
     const totalMonto = nodeLinks.reduce((sum, l) => sum + (l.monto_total || 0), 0);
+    
     const formatMonto = (n: number) => {
       if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B MXN`;
       if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M MXN`;
       if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K MXN`;
       return `$${n} MXN`;
     };
+
     setPanelData({
       name: node.name,
       rfc: node.id,
@@ -187,7 +237,9 @@ function Explorador() {
           ].filter(Boolean)
         : [],
     });
+    
     setPanelOpen(true);
+    
     if (node.group === "proveedor" && node.id !== activeRfc) {
       loadGraph(node.id);
     }
@@ -213,7 +265,6 @@ function Explorador() {
     <div className="flex flex-col h-screen bg-slate-950 text-white">
       {/* TOPBAR */}
       <header className="flex items-center h-14 px-3 sm:px-4 border-b border-white/10 bg-slate-950/80 backdrop-blur-sm shrink-0 z-50">
-        {/* Mobile: Hamburger + Logo */}
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -423,28 +474,16 @@ function Explorador() {
               linkWidth={(l: any) => Math.max(1, Math.min(3, Math.log((l.num_contratos || 1) + 1) * 0.8))}
               backgroundColor="#0f172a"
               onNodeClick={(n: any) => handleNodeClick(n)}
+              
+              // FÍSICA CORREGIDA: Sin temblores ni crashes
+              cooldownTicks={100} 
+              
               nodePointerAreaPaint={(node: any, color: string, ctx: any) => {
                 const r = (node.val ?? 6) * 10;
                 ctx.fillStyle = color;
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
                 ctx.fill();
-              }}
-              d3AlphaDecay={0.002}
-              d3VelocityDecay={0.3}
-              warmupTicks={0}
-              cooldownTicks={800}
-              onRenderFramePre={() => {
-                if (!forcesAppliedRef.current && graphRef.current && graphData) {
-                  const fg = graphRef.current;
-                  const nodeIds = new Set(graphData.nodes.map(n => n.id));
-                  const validLinks = graphData.links.filter(l => nodeIds.has(l.source) && nodeIds.has(l.target));
-                  fg.d3Force("charge", forceManyBody().strength(-10000).distanceMax(2000));
-                  fg.d3Force("link", forceLink(validLinks).id((d: any) => d.id).distance(500).strength(0.01));
-                  fg.d3Force("center", forceCenter(0, 0).strength(0.003));
-                  fg.d3Force("collision", forceCollide().radius(120).strength(1));
-                  forcesAppliedRef.current = true;
-                }
               }}
               nodeCanvasObjectMode={() => "replace"}
               nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -567,6 +606,7 @@ function LegendBadge({ color, label }: { color: string; label: string }) {
 
 function FlagBadge({ label, title }: { label: string; title: string }) {
   return <span title={title} className="text-sm">{label}</span>;
+<<<<<<< HEAD
 }
 
 export default function ExploradorPage() {
@@ -576,3 +616,6 @@ export default function ExploradorPage() {
     </Suspense>
   );
 }
+=======
+}
+>>>>>>> saul
