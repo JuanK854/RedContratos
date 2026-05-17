@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -13,7 +12,6 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("Error: Faltan las variables de entorno SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY")
 
-# Inicialización del cliente de Supabase
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI(
@@ -22,8 +20,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configuración de CORS
-# Se incluye "*" para evitar bloqueos durante el desarrollo remoto y las pruebas locales con Next.js
 origins = [
     "http://localhost:3000",
     "*", 
@@ -64,6 +60,7 @@ def get_stats():
             .execute()
         )
         total_adjudicaciones = adj_resp.count
+
 
         # 3. Contar las Licitaciones Públicas (los que sí concursaron)
         lic_resp = (
@@ -245,3 +242,19 @@ def get_alertas():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al cargar las alertas: {str(e)}")
+
+        
+@app.get("/contratos/{rfc}")
+def get_contratos_proveedor(rfc: str):
+    """Devuelve la lista completa de contratos de un proveedor específico."""
+    try:
+        response = (
+            supabase.table("contratos")
+            .select("id_contrato, institucion, tipo_procedimiento, monto, fecha_inicio")
+            .eq("rfc_proveedor", rfc)
+            .order("fecha_inicio", desc=True)
+            .execute()
+        )
+        return {"proveedor": rfc, "contratos": response.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener contratos: {str(e)}")

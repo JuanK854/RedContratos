@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Sheet,
   SheetContent,
@@ -16,6 +17,7 @@ import {
   Calendar,
   ExternalLink,
   Sparkles,
+  Network
 } from "lucide-react";
 
 interface NodeDetail {
@@ -50,26 +52,6 @@ const MOCK_DATA: NodeDetail = {
   flags: ["Fraccionamiento", "Renovación Espejo", "Empresa Fantasma"],
   direccion: "No disponible",
   registrado: "2026-01-15",
-  contratosRecientes: [
-    {
-      num: "CN-2026-000001",
-      dependencia: "Secretaría de Salud",
-      tipo: "Adjudicación Directa",
-      monto: "$5.2M",
-    },
-    {
-      num: "CN-2026-000042",
-      dependencia: "IMSS",
-      tipo: "Adjudicación Directa",
-      monto: "$12.8M",
-    },
-    {
-      num: "CN-2026-000087",
-      dependencia: "BIRMEX",
-      tipo: "Adjudicación Directa",
-      monto: "$3.1M",
-    },
-  ],
 };
 
 interface PanelDetalleProps {
@@ -134,62 +116,57 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
             <p className="mt-2 text-xs text-slate-500">{adjLabel}</p>
           </div>
 
-          {/* Información de la Entidad */}
+          {/* Información de la Entidad (ACTUALIZADO PARA DATOS REALES) */}
           <div>
             <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-              Información de la Entidad
+              Detalles de la Red
             </h3>
-            <div className="space-y-2">
-              <InfoRow icon={MapPin} label="Dirección" value={data.direccion || "No disponible"} />
-              <InfoRow icon={Users} label="Representante" value="No disponible" />
-              <InfoRow icon={Calendar} label="Registrado" value={data.registrado || "No disponible"} />
+            <div className="flex flex-col gap-3">
+              <div>
+                <p className="text-xs text-slate-500">RFC / Identificador</p>
+                <p className="font-mono text-sm text-slate-300">{data.rfc}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Dependencias afectadas</p>
+                <p className="text-sm text-slate-300">{data.dependencias} instituciones vinculadas</p>
+              </div>
+              
+              {/* Solo mostramos las banderas si tiene al menos una */}
+              {data.flags && data.flags.length > 0 && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-2">Banderas de Riesgo Detectadas</p>
+                  <div className="flex flex-wrap gap-2">
+                    {data.flags.map((flag, index) => (
+                      <span key={index} className="rounded-full bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400 border border-red-500/20">
+                        🚨 {flag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Contratos Recientes */}
-          {data.contratosRecientes && data.contratosRecientes.length > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                Contratos Recientes
-              </h3>
-              <div className="space-y-2">
-                {data.contratosRecientes.map((c) => (
-                  <div
-                    key={c.num}
-                    className="rounded-lg border border-white/10 bg-slate-900/50 p-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-mono text-[10px] text-slate-500">{c.num}</p>
-                        <p className="text-sm text-slate-200">{c.dependencia}</p>
-                        <span className="mt-1 inline-block rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-slate-400">
-                          {c.tipo}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">{c.monto}</span>
-                        <ExternalLink className="h-3 w-3 text-slate-600" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Footer */}
+       {/* Footer Restaurado (Solución a prueba de TypeScript) */}
         <div className="border-t border-white/10 px-6 py-4 flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+          {/* Botón original: Ver Todos los Contratos */}
+          <Link 
+            href={`/contratos/${data.rfc}`}
+            className="flex-1 inline-flex items-center justify-center rounded-md border border-red-500/50 bg-transparent px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
           >
-            Ver Todos los Contratos
-          </Button>
-          <Button className="flex-1 bg-red-600 text-white hover:bg-red-500">
+            <FileText className="mr-2 h-4 w-4" />
+            Ver Todos
+          </Link>
+
+          {/* Botón que lleva a la página de Análisis de IA (Caso) */}
+          <Link 
+            href={`/caso/${data.rfc}`}
+            className="flex-1 inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 transition-colors shadow-sm"
+          >
             <Sparkles className="mr-2 h-4 w-4" />
             Analizar con IA
-          </Button>
+          </Link>
         </div>
       </SheetContent>
     </Sheet>
@@ -212,26 +189,6 @@ function StatCard({
         <span className="text-xs text-slate-400">{label}</span>
       </div>
       <p className="text-xl font-bold text-white">{value}</p>
-    </div>
-  );
-}
-
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof MapPin;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      <Icon className="h-4 w-4 shrink-0 text-slate-600" />
-      <div>
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-sm text-slate-300">{value}</p>
-      </div>
     </div>
   );
 }
