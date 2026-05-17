@@ -1,5 +1,5 @@
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "mistralai/magistral-medium";
+const MODEL = "mistralai/mistral-small-3.2-24b-instruct";
 
 function formatMontoTexto(n: number): string {
   if (n >= 1e9) return `${(n / 1e9).toFixed(1)} mil millones de pesos`;
