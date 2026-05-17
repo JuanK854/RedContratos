@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef, useLayoutEffect } from "react";
+import { useState, useCallback, useRef, useLayoutEffect, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus, Menu, X } from "lucide-react";
 import { PanelDetalle } from "@/components/panel-detalle";
@@ -60,6 +61,18 @@ interface PanelData {
 }
 
 export default function Explorador() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen bg-slate-950 text-slate-500">
+        Cargando...
+      </div>
+    }>
+      <ExploradorContent />
+    </Suspense>
+  );
+}
+
+function ExploradorContent() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
@@ -83,11 +96,6 @@ export default function Explorador() {
 
   const forcesAppliedRef = useRef(false);
   const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const rfc = searchParams.get("rfc");
-    if (rfc) loadGraph(rfc);
-  }, [searchParams, loadGraph]);
 
   useLayoutEffect(() => {
     if (!graphRef.current || !graphData || graphData.nodes.length === 0) return;
@@ -153,6 +161,11 @@ export default function Explorador() {
       setLoadingGraph(false);
     }
   }, []);
+
+  useEffect(() => {
+    const rfc = searchParams.get("rfc");
+    if (rfc) loadGraph(rfc);
+  }, [searchParams, loadGraph]);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
     const nodeLinks = graphData?.links.filter(
