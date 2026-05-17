@@ -1,4 +1,5 @@
 import os
+import requests as http_requests
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
@@ -9,12 +10,17 @@ load_dotenv()
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+ZAVU_API_KEY = os.environ.get("ZAVU_API_KEY", "")
+ZAVU_PHONE_TO = os.environ.get("ZAVU_PHONE_TO", "")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("Error: Faltan las variables de entorno SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY")
 
 # Inicialización del cliente de Supabase
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+ZAVU_URL = "https://api.zavu.dev/v1/messages"
+SCORE_ALERTA = 80
 
 app = FastAPI(
     title="RedContratos API",
@@ -245,3 +251,95 @@ def get_alertas():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al cargar las alertas: {str(e)}")
+
+
+# --- HELPER ZAVU ---
+
+def _enviar_whatsapp(nombre: str, rfc: str, score: int, tipos_fraude: list[str], monto: float) -> dict:
+    """Envía una alerta WhatsApp vía Zavu para un proveedor con score > 80."""
+    if not ZAVU_API_KEY or not ZAVU_PHONE_TO:
+        return {"ok": False, "error": "ZAVU_API_KEY o ZAVU_PHONE_TO no configurados"}
+
+    tipos_str = ", ".join(tipos_fraude) if tipos_fraude else "Sin clasificar"
+    monto_str = (
+        f"${monto / 1e9:.1f}B" if monto >= 1e9
+        else f"${monto / 1e6:.0f}M" if monto >= 1e6
+        else f"${monto:,.0f}"
+    )
+
+    mensaje = (
+        f"🚨 *Alerta RedContratos*\n\n"
+        f"📋 *Proveedor:* {nombre}\n"
+        f"🔑 *RFC:* {rfc}\n"
+        f"⚠️ *Score de riesgo:* {score}/100\n"
+        f"🚩 *Tipo de alerta:* {tipos_str}\n"
+        f"💰 *Monto involucrado:* {monto_str} MXN"
+    )
+
+    try:
+        resp = http_requests.post(
+            ZAVU_URL,
+            json={"to": ZAVU_PHONE_TO, "text": mensaje},
+            headers={"Authorization": f"Bearer {ZAVU_API_KEY}", "Content-Type": "application/json"},
+            timeout=10,
+        )
+        return {"ok": resp.status_code < 300, "status": resp.status_code, "body": resp.text}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/analizar")
+def analizar_y_alertar():
+    """
+    Consulta todos los proveedores con score > 80 y envía una alerta WhatsApp
+    por cada uno vía Zavu. Devuelve un resumen de los mensajes enviados.
+    """
+    try:
+        resp = (
+            supabase.table("proveedores")
+            .select("rfc, nombre, score, total_monto, flag_fantasma, flag_fraccionamiento, flag_espejo")
+            .gt("score", SCORE_ALERTA)
+            .order("score", desc=True)
+            .execute()
+        )
+
+        if not resp.data:
+            return {"mensaje": "No hay proveedores con score > 80", "alertas_enviadas": 0, "resultados": []}
+
+        resultados = []
+        for prov in resp.data:
+            tipos_fraude = []
+            if prov.get("flag_fantasma"):
+                tipos_fraude.append("Empresa Fantasma")
+            if prov.get("flag_fraccionamiento"):
+                tipos_fraude.append("Fraccionamiento")
+            if prov.get("flag_espejo"):
+                tipos_fraude.append("Contrato Espejo")
+
+            zavu_result = _enviar_whatsapp(
+                nombre=prov["nombre"],
+                rfc=prov["rfc"],
+                score=prov["score"],
+                tipos_fraude=tipos_fraude,
+                monto=float(prov["total_monto"]) if prov["total_monto"] else 0,
+            )
+
+            resultados.append({
+                "rfc": prov["rfc"],
+                "nombre": prov["nombre"],
+                "score": prov["score"],
+                "whatsapp_enviado": zavu_result["ok"],
+                "detalle": zavu_result,
+            })
+
+        enviados = sum(1 for r in resultados if r["whatsapp_enviado"])
+
+        return {
+            "mensaje": f"{enviados} alertas WhatsApp enviadas de {len(resultados)} proveedores con score > {SCORE_ALERTA}",
+            "alertas_enviadas": enviados,
+            "total_detectados": len(resultados),
+            "resultados": resultados,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al ejecutar análisis: {str(e)}")
