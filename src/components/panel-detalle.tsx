@@ -116,19 +116,7 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
                 <p className="text-sm text-slate-300">{data.dependencias} instituciones vinculadas</p>
               </div>
               
-              {/* Banderas de Riesgo */}
-              {data.flags && data.flags.length > 0 && (
-                <div>
-                  <p className="text-xs text-slate-500 mb-2">Banderas de Riesgo Detectadas</p>
-                  <div className="flex flex-wrap gap-2">
-                    {data.flags.map((flag, index) => (
-                      <span key={index} className="rounded-full bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400 border border-red-500/20">
-                        🚨 {flag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+             
             </div>
           </div>
         </div>
