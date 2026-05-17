@@ -436,29 +436,49 @@ function Explorador() {
                 ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
                 ctx.fill();
               }}
-              nodeCanvasObjectMode={() => "replace"}
+             nodeCanvasObjectMode={() => "replace"}
               nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
                 const isCentral = node.id === activeRfc;
                 const color = nodeColor(node);
-                const baseRadius = isCentral ? 16 : (node.group === "proveedor" ? 12 : 8);
+
+                // 1. Nodos adaptativos: mantienen su tamaño visual sin importar el zoom
+                const baseRadius = isCentral ? 10 : (node.group === "proveedor" ? 6 : 4);
                 const radius = baseRadius / globalScale;
+
+                // Dibujar el círculo principal
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
                 ctx.fillStyle = color;
                 ctx.fill();
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, radius + (2 / globalScale), 0, 2 * Math.PI);
-                ctx.strokeStyle = color;
-                ctx.globalAlpha = 0.3;
-                ctx.lineWidth = 2 / globalScale;
-                ctx.stroke();
-                ctx.globalAlpha = 1;
+
+                // Halo brillante solo para el nodo principal (tu búsqueda)
+                if (isCentral) {
+                  ctx.beginPath();
+                  ctx.arc(node.x, node.y, radius + (2 / globalScale), 0, 2 * Math.PI);
+                  ctx.strokeStyle = color;
+                  ctx.globalAlpha = 0.5;
+                  ctx.lineWidth = 1.5 / globalScale;
+                  ctx.stroke();
+                  ctx.globalAlpha = 1;
+                }
+
+                // 2. 🛡️ EL ESCUDO ANTI-MANCHAS (Especial para Móviles)
+                // SOLO mostramos texto si es la empresa central, o si hicimos MUCHO zoom (> 2.5)
+                const isZoomedIn = globalScale > 2.5;
+                const showText = isCentral || isZoomedIn;
+
+                // Si no cumple las condiciones, cortamos aquí y NO dibujamos el texto
+                if (!showText) return;
+
+                // 3. Dibujamos el texto limpio y legible
                 const label = node.name.length > 20 ? node.name.slice(0, 18) + "…" : node.name;
-                const fontSize = Math.max(8, Math.min(11, 10 / globalScale));
+                const fontSize = (isCentral ? 14 : 10) / globalScale;
+
                 ctx.font = `bold ${fontSize}px system-ui, -apple-system, sans-serif`;
-                ctx.fillStyle = "rgba(255,255,255,0.85)";
+                // El texto principal es más brillante que los secundarios
+                ctx.fillStyle = isCentral ? "#ffffff" : "rgba(255,255,255,0.7)";
                 ctx.textAlign = "center";
-                ctx.fillText(label, node.x, node.y + radius + fontSize + (8 / globalScale));
+                ctx.fillText(label, node.x, node.y + radius + (4 / globalScale) + fontSize);
               }}
             />
           )}
