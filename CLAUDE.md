@@ -276,6 +276,9 @@ Al presentar el domingo, el flujo ideal es:
 
 ## 📝 Notas Importantes para el Asistente
 
+### Reglas de Git
+- **Antes de cualquier push a main**, hacer `git fetch origin && git log HEAD..origin/main --oneline` para verificar si hay commits nuevos. Si los hay, hacer pull primero para evitar conflictos.
+
 - El equipo usa **React / Next.js** como stack principal y nivel **intermedio**
 - El asistente (Claude) está activamente ayudando a codear durante el hackathon
 - **No usar Magistral de OpenRouter a menos que se indique explícitamente** — por el momento se usa para el análisis de redes pero no es prioridad
