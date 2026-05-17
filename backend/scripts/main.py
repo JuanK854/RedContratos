@@ -20,7 +20,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 ZAVU_URL = "https://api.zavu.dev/v1/messages"
-SCORE_ALERTA = 80
+SCORE_ALERTA = 70
 
 app = FastAPI(
     title="RedContratos API",
