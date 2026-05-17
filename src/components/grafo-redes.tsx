@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { PanelDetalle } from "./panel-detalle";
 import { API_URL } from "@/lib/config";
 import { forceManyBody, forceLink, forceCenter, forceCollide } from "d3-force";
+import { ZoomIn, ZoomOut, Maximize2, Building2, User, Ghost } from "lucide-react";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
@@ -30,6 +31,8 @@ interface GraphData {
   links: GraphLink[];
 }
 
+type NodeTypeFilter = "todos" | "institucion" | "proveedor" | "fantasma";
+
 const DEFAULT_RFC = "ASE930924SS7";
 
 export function GrafoRedes() {
@@ -42,6 +45,10 @@ export function GrafoRedes() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [nodeFilter, setNodeFilter] = useState<NodeTypeFilter>("todos");
+  const [zoom, setZoom] = useState(1);
+  const [visible, setVisible] = useState(false);
   const fgRef = useRef<any>(null);
 
   const fetchGraph = useCallback(async (rfc: string) => {
@@ -53,6 +60,7 @@ export function GrafoRedes() {
         const data = await res.json();
         if (data.nodes && data.nodes.length > 0) {
           setGraphData(data);
+          setTimeout(() => setVisible(true), 100);
         } else {
           setError("No se encontraron conexiones para este proveedor");
           setGraphData({ nodes: [], links: [] });
@@ -81,10 +89,79 @@ export function GrafoRedes() {
     return "#3b82f6";
   }, []);
 
+  const getNodeOpacity = useCallback((node: GraphNode) => {
+    if (!hoveredNode) return 1;
+    if (node.id === hoveredNode) return 1;
+    
+    const isConnected = graphData.links.some(
+      (l) => (l.source === hoveredNode && l.target === node.id) ||
+             (l.target === hoveredNode && l.source === node.id)
+    );
+    return isConnected ? 0.8 : 0.1;
+  }, [hoveredNode, graphData.links]);
+
+  const getLinkOpacity = useCallback((link: GraphLink) => {
+    if (!hoveredNode) return 0.2;
+    if (link.source === hoveredNode || link.target === hoveredNode) return 0.8;
+    return 0.05;
+  }, [hoveredNode]);
+
+  const getLinkWidth = useCallback((link: GraphLink) => {
+    if (!hoveredNode) return 1;
+    if (link.source === hoveredNode || link.target === hoveredNode) return 2.5;
+    return 0.5;
+  }, [hoveredNode]);
+
+  const filteredNodes = useMemo(() => {
+    if (nodeFilter === "todos") return graphData.nodes;
+    if (nodeFilter === "institucion") return graphData.nodes.filter(n => n.group === "institucion");
+    if (nodeFilter === "proveedor") return graphData.nodes.filter(n => n.group === "proveedor" && !n.flags?.fantasma);
+    if (nodeFilter === "fantasma") return graphData.nodes.filter(n => n.flags?.fantasma);
+    return graphData.nodes;
+  }, [graphData.nodes, nodeFilter]);
+
+  const filteredLinks = useMemo(() => {
+    const nodeIds = new Set(filteredNodes.map(n => n.id));
+    return graphData.links.filter(l => nodeIds.has(l.source) && nodeIds.has(l.target));
+  }, [graphData.links, filteredNodes]);
+
+  const filteredGraphData = useMemo(() => ({
+    nodes: filteredNodes,
+    links: filteredLinks
+  }), [filteredNodes, filteredLinks]);
+
   const handleNodeClick = useCallback((node: GraphNode) => {
     setSelectedNode(node.id);
     setPanelOpen(true);
   }, []);
+
+  const handleNodeHover = useCallback((node: GraphNode | null) => {
+    setHoveredNode(node?.id || null);
+  }, []);
+
+  const handleZoomIn = () => {
+    if (fgRef.current) {
+      const newZoom = Math.min(zoom * 1.3, 5);
+      fgRef.current.zoom(newZoom, 400);
+      setZoom(newZoom);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (fgRef.current) {
+      const newZoom = Math.max(zoom / 1.3, 0.1);
+      fgRef.current.zoom(newZoom, 400);
+      setZoom(newZoom);
+    }
+  };
+
+  const handleResetZoom = () => {
+    if (fgRef.current) {
+      fgRef.current.zoom(1, 400);
+      fgRef.current.centerAt(0, 0, 400);
+      setZoom(1);
+    }
+  };
 
   const selectedNodeData = useMemo(() => {
     if (!selectedNode) return undefined;
@@ -157,16 +234,9 @@ export function GrafoRedes() {
     
     const fg = fgRef.current;
     
-    // Repulsión masiva entre todos los nodos
     fg.d3Force("charge", forceManyBody().strength(-10000).distanceMax(2000));
-    
-    // Enlaces muy largos y flojos
     fg.d3Force("link", forceLink(graphData.links).id((d: any) => d.id).distance(500).strength(0.01));
-    
-    // Centro muy débil - apenas mantiene el grafo en vista
     fg.d3Force("center", forceCenter(0, 0).strength(0.003));
-    
-    // Colisión grande para evitar solapamiento
     fg.d3Force("collision", forceCollide().radius(120).strength(1));
     
     fg.cooldownTicks(1000);
@@ -174,28 +244,105 @@ export function GrafoRedes() {
   }, [graphData]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className={`relative w-full h-full transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <ForceGraph2D
         ref={fgRef}
-        graphData={graphData}
+        graphData={filteredGraphData}
         backgroundColor="#0f172a"
         nodeColor={nodeColor as (node: object) => string}
         nodeLabel="name"
         nodeVal="val"
-        linkColor="rgba(255,255,255,0.2)"
-        linkWidth={1}
+        linkColor={(link: any) => `rgba(255,255,255,${getLinkOpacity(link)})`}
+        linkWidth={getLinkWidth as any}
         nodeRelSize={5}
         cooldownTicks={500}
         onNodeClick={handleNodeClick as any}
+        onNodeHover={handleNodeHover as any}
         nodeCanvasObjectMode={() => "after"}
+        nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+          const opacity = getNodeOpacity(node as GraphNode);
+          ctx.globalAlpha = opacity;
+        }}
       />
+
+      {/* Controles de zoom */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+        <button
+          onClick={handleZoomIn}
+          className="w-10 h-10 rounded-lg border border-white/10 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+          title="Zoom in"
+        >
+          <ZoomIn size={18} />
+        </button>
+        <button
+          onClick={handleZoomOut}
+          className="w-10 h-10 rounded-lg border border-white/10 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+          title="Zoom out"
+        >
+          <ZoomOut size={18} />
+        </button>
+        <button
+          onClick={handleResetZoom}
+          className="w-10 h-10 rounded-lg border border-white/10 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+          title="Reset zoom"
+        >
+          <Maximize2 size={18} />
+        </button>
+      </div>
+
+      {/* Filtros por tipo de nodo */}
+      <div className="absolute top-4 left-4 flex items-center gap-2">
+        <button
+          onClick={() => setNodeFilter("todos")}
+          className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+            nodeFilter === "todos"
+              ? "bg-white/20 border-white/30 text-white"
+              : "bg-slate-900/80 border-white/10 text-slate-400 hover:text-white"
+          }`}
+        >
+          Todos
+        </button>
+        <button
+          onClick={() => setNodeFilter("institucion")}
+          className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1.5 ${
+            nodeFilter === "institucion"
+              ? "bg-slate-600/40 border-slate-500/50 text-white"
+              : "bg-slate-900/80 border-white/10 text-slate-400 hover:text-white"
+          }`}
+        >
+          <Building2 size={12} />
+          Instituciones
+        </button>
+        <button
+          onClick={() => setNodeFilter("proveedor")}
+          className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1.5 ${
+            nodeFilter === "proveedor"
+              ? "bg-blue-600/40 border-blue-500/50 text-white"
+              : "bg-slate-900/80 border-white/10 text-slate-400 hover:text-white"
+          }`}
+        >
+          <User size={12} />
+          Proveedores
+        </button>
+        <button
+          onClick={() => setNodeFilter("fantasma")}
+          className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center gap-1.5 ${
+            nodeFilter === "fantasma"
+              ? "bg-green-600/40 border-green-500/50 text-white"
+              : "bg-slate-900/80 border-white/10 text-slate-400 hover:text-white"
+          }`}
+        >
+          <Ghost size={12} />
+          Fantasma
+        </button>
+      </div>
 
       {/* Leyenda */}
       <div className="absolute bottom-4 left-4 rounded-xl border border-white/10 bg-slate-900/80 backdrop-blur-sm p-4">
         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Leyenda</p>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="w-3 h-3 rounded-full bg-slate-600" />
             <span className="text-xs text-slate-300">Institución</span>
           </div>
           <div className="flex items-center gap-2">
@@ -206,6 +353,10 @@ export function GrafoRedes() {
             <span className="w-3 h-3 rounded-full bg-green-500" />
             <span className="text-xs text-slate-300">Empresa Fantasma</span>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="text-xs text-slate-300">Riesgo Alto</span>
+          </div>
         </div>
       </div>
 
@@ -213,11 +364,11 @@ export function GrafoRedes() {
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <div className="rounded-lg border border-white/10 bg-slate-900/80 backdrop-blur-sm px-3 py-1.5">
           <span className="text-xs text-slate-400">Nodos: </span>
-          <span className="text-xs font-semibold text-white">{graphData.nodes.length}</span>
+          <span className="text-xs font-semibold text-white">{filteredNodes.length}</span>
         </div>
         <div className="rounded-lg border border-white/10 bg-slate-900/80 backdrop-blur-sm px-3 py-1.5">
           <span className="text-xs text-slate-400">Conexiones: </span>
-          <span className="text-xs font-semibold text-white">{graphData.links.length}</span>
+          <span className="text-xs font-semibold text-white">{filteredLinks.length}</span>
         </div>
       </div>
 
