@@ -71,7 +71,7 @@ export default function AlertasPage() {
     setAnalizando(true);
     setResultadoAnalisis(null);
     try {
-      const res = await fetch(`${API_URL}/analizar`, { method: "POST" });
+      const res = await fetch("/api/analizar", { method: "POST" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setResultadoAnalisis({ enviadas: data.alertas_enviadas, total: data.total_detectados, mensaje: data.mensaje });

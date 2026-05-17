@@ -11,7 +11,7 @@ load_dotenv()
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 ZAVU_API_KEY = os.environ.get("ZAVU_API_KEY", "")
-ZAVU_PHONE_TO = os.environ.get("ZAVU_PHONE_TO", "")
+ZAVU_TELEGRAM_TO = os.environ.get("ZAVU_TELEGRAM_TO", "")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("Error: Faltan las variables de entorno SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY")
@@ -255,10 +255,10 @@ def get_alertas():
 
 # --- HELPER ZAVU ---
 
-def _enviar_whatsapp(nombre: str, rfc: str, score: int, tipos_fraude: list[str], monto: float) -> dict:
-    """Envía una alerta WhatsApp vía Zavu para un proveedor con score > 80."""
-    if not ZAVU_API_KEY or not ZAVU_PHONE_TO:
-        return {"ok": False, "error": "ZAVU_API_KEY o ZAVU_PHONE_TO no configurados"}
+def _enviar_telegram(nombre: str, rfc: str, score: int, tipos_fraude: list[str], monto: float) -> dict:
+    """Envía una alerta por Telegram vía Zavu para un proveedor con score alto."""
+    if not ZAVU_API_KEY or not ZAVU_TELEGRAM_TO:
+        return {"ok": False, "error": "ZAVU_API_KEY o ZAVU_TELEGRAM_TO no configurados"}
 
     tipos_str = ", ".join(tipos_fraude) if tipos_fraude else "Sin clasificar"
     monto_str = (
@@ -268,18 +268,18 @@ def _enviar_whatsapp(nombre: str, rfc: str, score: int, tipos_fraude: list[str],
     )
 
     mensaje = (
-        f"🚨 *Alerta RedContratos*\n\n"
-        f"📋 *Proveedor:* {nombre}\n"
-        f"🔑 *RFC:* {rfc}\n"
-        f"⚠️ *Score de riesgo:* {score}/100\n"
-        f"🚩 *Tipo de alerta:* {tipos_str}\n"
-        f"💰 *Monto involucrado:* {monto_str} MXN"
+        f"🚨 Alerta RedContratos\n\n"
+        f"📋 Proveedor: {nombre}\n"
+        f"🔑 RFC: {rfc}\n"
+        f"⚠️ Score de riesgo: {score}/100\n"
+        f"🚩 Tipo de alerta: {tipos_str}\n"
+        f"💰 Monto involucrado: {monto_str} MXN"
     )
 
     try:
         resp = http_requests.post(
             ZAVU_URL,
-            json={"to": ZAVU_PHONE_TO, "text": mensaje},
+            json={"to": ZAVU_TELEGRAM_TO, "channel": "telegram", "text": mensaje},
             headers={"Authorization": f"Bearer {ZAVU_API_KEY}", "Content-Type": "application/json"},
             timeout=10,
         )
@@ -316,7 +316,7 @@ def analizar_y_alertar():
             if prov.get("flag_espejo"):
                 tipos_fraude.append("Contrato Espejo")
 
-            zavu_result = _enviar_whatsapp(
+            zavu_result = _enviar_telegram(
                 nombre=prov["nombre"],
                 rfc=prov["rfc"],
                 score=prov["score"],
@@ -328,14 +328,14 @@ def analizar_y_alertar():
                 "rfc": prov["rfc"],
                 "nombre": prov["nombre"],
                 "score": prov["score"],
-                "whatsapp_enviado": zavu_result["ok"],
+                "telegram_enviado": zavu_result["ok"],
                 "detalle": zavu_result,
             })
 
-        enviados = sum(1 for r in resultados if r["whatsapp_enviado"])
+        enviados = sum(1 for r in resultados if r["telegram_enviado"])
 
         return {
-            "mensaje": f"{enviados} alertas WhatsApp enviadas de {len(resultados)} proveedores con score >= {SCORE_ALERTA}",
+            "mensaje": f"{enviados} alertas Telegram enviadas de {len(resultados)} proveedores con score >= {SCORE_ALERTA}",
             "alertas_enviadas": enviados,
             "total_detectados": len(resultados),
             "resultados": resultados,
