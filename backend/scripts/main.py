@@ -298,13 +298,13 @@ def analizar_y_alertar():
         resp = (
             supabase.table("proveedores")
             .select("rfc, nombre, score, total_monto, flag_fantasma, flag_fraccionamiento, flag_espejo")
-            .gt("score", SCORE_ALERTA)
+            .gte("score", SCORE_ALERTA)
             .order("score", desc=True)
             .execute()
         )
 
         if not resp.data:
-            return {"mensaje": "No hay proveedores con score > 80", "alertas_enviadas": 0, "resultados": []}
+            return {"mensaje": f"No hay proveedores con score >= {SCORE_ALERTA}", "alertas_enviadas": 0, "resultados": []}
 
         resultados = []
         for prov in resp.data:
@@ -335,7 +335,7 @@ def analizar_y_alertar():
         enviados = sum(1 for r in resultados if r["whatsapp_enviado"])
 
         return {
-            "mensaje": f"{enviados} alertas WhatsApp enviadas de {len(resultados)} proveedores con score > {SCORE_ALERTA}",
+            "mensaje": f"{enviados} alertas WhatsApp enviadas de {len(resultados)} proveedores con score >= {SCORE_ALERTA}",
             "alertas_enviadas": enviados,
             "total_detectados": len(resultados),
             "resultados": resultados,
