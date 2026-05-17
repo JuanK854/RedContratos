@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Network, ArrowLeft, AlertTriangle, Shield } from "lucide-react";
 import { API_URL } from "@/lib/config";
-import { ScoreBadge, getScoreInfo } from "@/components/score-badge";
+import { ScoreBadge } from "@/components/score-badge";
 
 interface ProveedorTop {
   rfc: string;
@@ -30,7 +30,7 @@ export default function TopPage() {
         return res.json();
       })
       .then((data) => {
-        setProveedores(data.proveedores ?? data.results ?? data ?? []);
+        setProveedores(data.top_sospechosos || []);
       })
       .catch((err) => {
         setError(err.message || "Error al cargar datos");
@@ -51,7 +51,7 @@ export default function TopPage() {
     <div className="min-h-screen bg-slate-950 text-white">
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600">
               <Network className="h-4 w-4 text-white" />
@@ -65,23 +65,23 @@ export default function TopPage() {
             className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver al inicio
+            <span className="hidden sm:inline">Volver al inicio</span>
           </Link>
         </div>
       </header>
 
       {/* CONTENT */}
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-10">
         {/* Title */}
-        <div className="mb-8">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/5 px-4 py-1.5">
+        <div className="mb-6 sm:mb-8">
+          <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/5 px-3 sm:px-4 py-1.5">
             <AlertTriangle className="h-4 w-4 text-red-400" />
-            <span className="text-sm font-medium text-red-400">Ranking de Riesgo</span>
+            <span className="text-xs sm:text-sm font-medium text-red-400">Ranking de Riesgo</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Top 20 Proveedores Más Sospechosos
           </h1>
-          <p className="mt-2 text-slate-400">
+          <p className="mt-1 sm:mt-2 text-sm text-slate-400">
             Proveedores con mayor score de riesgo basado en patrones de contratación
           </p>
         </div>
@@ -105,70 +105,89 @@ export default function TopPage() {
           </div>
         )}
 
-        {/* Table */}
+        {/* Mobile: Card list */}
         {!loading && !error && proveedores.length > 0 && (
-          <div className="rounded-xl border border-white/10 bg-slate-900/50 overflow-hidden">
-            {/* Header row */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-white/10 bg-slate-900 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              <div className="col-span-1">#</div>
-              <div className="col-span-4">Proveedor</div>
-              <div className="col-span-2 text-center">Score</div>
-              <div className="col-span-2 text-right">Monto Total</div>
-              <div className="col-span-1 text-center">Dep.</div>
-              <div className="col-span-2 text-center">Acción</div>
-            </div>
-
-            {/* Rows */}
-            {proveedores.map((p, i) => (
-              <div
-                key={p.rfc}
-                className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/5 items-center hover:bg-white/[0.02] transition-colors"
-              >
-                {/* Rank */}
-                <div className="col-span-1">
-                  <RankBadge rank={i + 1} />
-                </div>
-
-                {/* Name + RFC */}
-                <div className="col-span-4 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{p.nombre}</p>
-                  <p className="text-xs text-slate-500 font-mono">{p.rfc}</p>
-                  <div className="flex gap-1 mt-1">
-                    {p.flag_fantasma && <FlagBadge label="Fantasma" color="bg-green-500/20 text-green-400" />}
-                    {p.flag_fraccionamiento && <FlagBadge label="Fraccionamiento" color="bg-orange-500/20 text-orange-400" />}
-                    {p.flag_espejo && <FlagBadge label="Espejo" color="bg-purple-500/20 text-purple-400" />}
+          <>
+            {/* Desktop: Table */}
+            <div className="hidden md:block rounded-xl border border-white/10 bg-slate-900/50 overflow-hidden">
+              <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-white/10 bg-slate-900 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <div className="col-span-1">#</div>
+                <div className="col-span-4">Proveedor</div>
+                <div className="col-span-2 text-center">Score</div>
+                <div className="col-span-2 text-right">Monto Total</div>
+                <div className="col-span-1 text-center">Dep.</div>
+                <div className="col-span-2 text-center">Acción</div>
+              </div>
+              {proveedores.map((p, i) => (
+                <div
+                  key={p.rfc}
+                  className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/5 items-center hover:bg-white/[0.02] transition-colors"
+                >
+                  <div className="col-span-1"><RankBadge rank={i + 1} /></div>
+                  <div className="col-span-4 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{p.nombre}</p>
+                    <p className="text-xs text-slate-500 font-mono">{p.rfc}</p>
+                    <div className="flex gap-1 mt-1">
+                      {p.flag_fantasma && <FlagBadge label="Fantasma" color="bg-green-500/20 text-green-400" />}
+                      {p.flag_fraccionamiento && <FlagBadge label="Fraccionamiento" color="bg-orange-500/20 text-orange-400" />}
+                      {p.flag_espejo && <FlagBadge label="Espejo" color="bg-purple-500/20 text-purple-400" />}
+                    </div>
+                  </div>
+                  <div className="col-span-2 text-center"><ScoreBadge score={p.score} size="sm" /></div>
+                  <div className="col-span-2 text-right">
+                    <p className="text-sm font-semibold text-white">{formatMonto(p.total_monto)}</p>
+                    <p className="text-xs text-slate-500">{p.total_contratos} contratos</p>
+                  </div>
+                  <div className="col-span-1 text-center">
+                    <span className="text-sm font-medium text-slate-300">{p.num_dependencias}</span>
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <Link
+                      href={`/explorador?rfc=${encodeURIComponent(p.rfc)}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/50 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
+                    >
+                      <Network className="h-3 w-3" />
+                      Ver Red
+                    </Link>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                {/* Score */}
-                <div className="col-span-2 text-center">
-                  <ScoreBadge score={p.score} size="sm" />
-                </div>
-
-                {/* Monto */}
-                <div className="col-span-2 text-right">
-                  <p className="text-sm font-semibold text-white">{formatMonto(p.total_monto)}</p>
-                  <p className="text-xs text-slate-500">{p.total_contratos} contratos</p>
-                </div>
-
-                {/* Dependencias */}
-                <div className="col-span-1 text-center">
-                  <span className="text-sm font-medium text-slate-300">{p.num_dependencias}</span>
-                </div>
-
-                {/* Action */}
-                <div className="col-span-2 text-center">
-                  <Link
-                    href={`/explorador?rfc=${encodeURIComponent(p.rfc)}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/50 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
-                  >
-                    <Network className="h-3 w-3" />
-                    Ver Red
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+            {/* Mobile: Cards */}
+            <div className="md:hidden flex flex-col gap-3">
+              {proveedores.map((p, i) => (
+                <Link
+                  key={p.rfc}
+                  href={`/explorador?rfc=${encodeURIComponent(p.rfc)}`}
+                  className="rounded-xl border border-white/10 bg-slate-900/50 p-4 hover:bg-slate-900 transition-colors block"
+                >
+                  <div className="flex items-start gap-3">
+                    <RankBadge rank={i + 1} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{p.nombre}</p>
+                      <p className="text-xs text-slate-500 font-mono">{p.rfc}</p>
+                      <div className="flex gap-1 mt-1.5 flex-wrap">
+                        {p.flag_fantasma && <FlagBadge label="Fantasma" color="bg-green-500/20 text-green-400" />}
+                        {p.flag_fraccionamiento && <FlagBadge label="Fraccionamiento" color="bg-orange-500/20 text-orange-400" />}
+                        {p.flag_espejo && <FlagBadge label="Espejo" color="bg-purple-500/20 text-purple-400" />}
+                      </div>
+                    </div>
+                    <ScoreBadge score={p.score} size="sm" />
+                  </div>
+                  <div className="mt-3 flex items-center justify-between pt-3 border-t border-white/5">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{formatMonto(p.total_monto)}</p>
+                      <p className="text-xs text-slate-500">{p.total_contratos} contratos · {p.num_dependencias} dep.</p>
+                    </div>
+                    <span className="text-xs font-medium text-red-400 flex items-center gap-1">
+                      Ver Red <Network className="h-3 w-3" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Empty state */}
@@ -194,7 +213,7 @@ function RankBadge({ rank }: { rank: number }) {
       : "bg-slate-800 text-slate-400 border-slate-700";
 
   return (
-    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-bold ${colors}`}>
+    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-bold shrink-0 ${colors}`}>
       {rank}
     </span>
   );
