@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useLayoutEffect, useEffect, Suspense } f
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus, Menu, X } from "lucide-react";
+import { Search, Network, AlertTriangle, BarChart3, FolderOpen, Plus, Minus, Menu, X, Ghost, Scissors, Copy } from "lucide-react";
 import { PanelDetalle } from "@/components/panel-detalle";
 import { ScoreBadge } from "@/components/score-badge";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -269,9 +269,9 @@ function ExploradorContent() {
                     <p className="text-xs text-slate-500 font-mono">{r.rfc}</p>
                   </div>
                   <div className="flex items-center gap-1.5 ml-3 shrink-0">
-                    {r.flag_fantasma && <FlagBadge label="👻" title="Empresa fantasma" />}
-                    {r.flag_fraccionamiento && <FlagBadge label="✂️" title="Fraccionamiento" />}
-                    {r.flag_espejo && <FlagBadge label="🪞" title="Contrato espejo" />}
+                    {r.flag_fantasma && <FlagBadge icon={Ghost} title="Empresa fantasma" />}
+                    {r.flag_fraccionamiento && <FlagBadge icon={Scissors} title="Fraccionamiento" />}
+                    {r.flag_espejo && <FlagBadge icon={Copy} title="Contrato espejo" />}
                     <ScoreBadge score={r.score} />
                   </div>
                 </button>
@@ -332,7 +332,7 @@ function ExploradorContent() {
                     <p className="text-xs text-slate-500 font-mono">{r.rfc}</p>
                   </div>
                   <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                    {r.flag_fantasma && <FlagBadge label="👻" title="Empresa fantasma" />}
+                    {r.flag_fantasma && <FlagBadge icon={Ghost} title="Empresa fantasma" />}
                     <ScoreBadge score={r.score} />
                   </div>
                 </button>
@@ -573,6 +573,6 @@ function LegendBadge({ color, label }: { color: string; label: string }) {
   );
 }
 
-function FlagBadge({ label, title }: { label: string; title: string }) {
-  return <span title={title} className="text-sm">{label}</span>;
+function FlagBadge({ icon: Icon, title }: { icon: typeof Ghost; title: string }) {
+  return <Icon size={14} className="text-slate-400" aria-label={title} />;
 }
