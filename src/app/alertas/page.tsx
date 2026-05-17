@@ -12,6 +12,9 @@ import {
   DollarSign,
   ExternalLink,
   ShieldAlert,
+  BellRing,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { ScoreBadge } from "@/components/score-badge";
@@ -61,6 +64,23 @@ export default function AlertasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabActivo, setTabActivo] = useState<TipoAlerta | "Todas">("Todas");
+  const [analizando, setAnalizando] = useState(false);
+  const [resultadoAnalisis, setResultadoAnalisis] = useState<{ enviadas: number; total: number } | null>(null);
+
+  const ejecutarAnalisis = async () => {
+    setAnalizando(true);
+    setResultadoAnalisis(null);
+    try {
+      const res = await fetch(`${API_URL}/analizar`, { method: "POST" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setResultadoAnalisis({ enviadas: data.alertas_enviadas, total: data.total_detectados });
+    } catch {
+      setResultadoAnalisis({ enviadas: 0, total: 0 });
+    } finally {
+      setAnalizando(false);
+    }
+  };
 
   useEffect(() => {
     fetch(`${API_URL}/alertas`)
@@ -111,17 +131,43 @@ export default function AlertasPage() {
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-10">
         {/* TÍTULO */}
-        <div className="mb-6 sm:mb-8">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/5 px-3 py-1.5">
-            <ShieldAlert className="h-4 w-4 text-red-400" />
-            <span className="text-xs font-medium text-red-400">Detección Automática</span>
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/5 px-3 py-1.5">
+              <ShieldAlert className="h-4 w-4 text-red-400" />
+              <span className="text-xs font-medium text-red-400">Detección Automática</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Alertas de Corrupción
+            </h1>
+            <p className="mt-1 text-sm text-slate-400">
+              Casos detectados automáticamente en el dataset CompraNet 2026
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Alertas de Corrupción
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Casos detectados automáticamente en el dataset CompraNet 2026
-          </p>
+
+          {/* Botón analizar + feedback */}
+          <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+            <button
+              onClick={ejecutarAnalisis}
+              disabled={analizando}
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+            >
+              {analizando
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <BellRing className="h-4 w-4" />}
+              {analizando ? "Analizando..." : "Ejecutar Análisis"}
+            </button>
+
+            {resultadoAnalisis && (
+              <div className="inline-flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-400 shrink-0" />
+                <span className="text-xs text-green-400 font-medium">
+                  {resultadoAnalisis.enviadas} WhatsApp enviados
+                  <span className="text-green-600"> · {resultadoAnalisis.total} con score &gt; 80</span>
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* LOADING / ERROR */}
