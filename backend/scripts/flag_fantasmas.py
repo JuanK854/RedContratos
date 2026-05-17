@@ -8,9 +8,9 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 
-PAGE_SIZE    = 1000
-SCORE_MIN    = 50
-MIN_CONTRATOS = 2
+PAGE_SIZE     = 1000
+SCORE_MIN     = 70
+MIN_CONTRATOS = 3
 
 
 def fetch_all(client, table, fields):
@@ -36,35 +36,45 @@ def main():
     client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
     print("Descargando contratos...")
-    contratos = fetch_all(client, "contratos", "rfc,fecha_inicio")
+    contratos = fetch_all(client, "contratos", "rfc,fecha_inicio,institucion")
     print(f"  {len(contratos):,} contratos")
 
-    # Agrupar fechas por RFC
-    fechas_por_rfc: dict[str, list[str]] = {}
+    # Agrupar por RFC: fechas e instituciones
+    datos_por_rfc: dict[str, dict] = {}
     for row in contratos:
         rfc = row.get("rfc")
         if not rfc:
             continue
-        fechas_por_rfc.setdefault(rfc, []).append(row.get("fecha_inicio") or "")
+        entry = datos_por_rfc.setdefault(rfc, {"fechas": [], "instituciones": []})
+        entry["fechas"].append(row.get("fecha_inicio") or "")
+        entry["instituciones"].append(row.get("institucion") or "")
 
-    # RFCs donde TODOS los contratos son de 2026 y tienen al menos MIN_CONTRATOS
-    rfcs_solo_2026 = {
-        rfc
-        for rfc, fechas in fechas_por_rfc.items()
-        if len(fechas) >= MIN_CONTRATOS and all("/2026" in f for f in fechas)
-    }
-    print(f"  {len(rfcs_solo_2026):,} RFCs con contratos solo en 2026 (>={MIN_CONTRATOS} contratos)")
+    # Criterio 1+3+4: solo 2026, >= MIN_CONTRATOS, todas instituciones distintas
+    rfcs_solo_2026 = set()
+    for rfc, data in datos_por_rfc.items():
+        fechas = data["fechas"]
+        instituciones = data["instituciones"]
+        if len(fechas) < MIN_CONTRATOS:
+            continue
+        if not all("/2026" in f for f in fechas):
+            continue
+        # Todas las instituciones deben ser diferentes (no proveedor habitual de una sola entidad)
+        if len(set(instituciones)) < len(instituciones):
+            continue
+        rfcs_solo_2026.add(rfc)
+
+    print(f"  {len(rfcs_solo_2026):,} RFCs: solo 2026, >={MIN_CONTRATOS} contratos, instituciones distintas")
 
     print("Descargando proveedores...")
     proveedores = fetch_all(client, "proveedores", "rfc,nombre,score,total_contratos")
     print(f"  {len(proveedores):,} proveedores")
 
-    # Cruzar: solo en 2026 + score >= SCORE_MIN
+    # Criterio 2: score >= SCORE_MIN
     fantasmas = [
         p for p in proveedores
         if p["rfc"] in rfcs_solo_2026 and (p.get("score") or 0) >= SCORE_MIN
     ]
-    print(f"  {len(fantasmas):,} empresas fantasma (score >= {SCORE_MIN})")
+    print(f"  {len(fantasmas):,} empresas fantasma (todos los criterios cumplidos)")
 
     if not fantasmas:
         print("No se encontraron empresas fantasma.")
@@ -79,10 +89,10 @@ def main():
         client.table("proveedores").update({"flag_fantasma": True}).in_("rfc", chunk).execute()
         updated += len(chunk)
 
-    print(f"\n✅ {updated} proveedores actualizados con flag_fantasma = true\n")
-    print("🚩 Empresas fantasma detectadas:")
+    print(f"\n{updated} proveedores actualizados con flag_fantasma = true\n")
+    print("Empresas fantasma detectadas:")
     for p in sorted(fantasmas, key=lambda x: x.get("score") or 0, reverse=True):
-        print(f"   🚩 {p['nombre']} — {p['rfc']} — score: {p.get('score', 0)} — contratos: {p.get('total_contratos', '?')}")
+        print(f"  {p['nombre']} | {p['rfc']} | score: {p.get('score', 0)} | contratos: {p.get('total_contratos', '?')}")
 
 
 if __name__ == "__main__":

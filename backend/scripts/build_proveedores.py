@@ -13,7 +13,7 @@ CSV_IN       = Path(__file__).parent.parent / "data" / "contratos_clean.csv"
 CSV_OUT      = Path(__file__).parent.parent / "data" / "proveedores_clean.csv"
 BATCH_SIZE   = 500
 
-def compute_score(row):
+def compute_score(row, p90_monto_promedio):
     score = 0
     if row["num_dependencias"] > 50:
         score += 40
@@ -23,7 +23,11 @@ def compute_score(row):
         score += 20
     if row["total_monto"] > 1_000_000_000:
         score += 10
-    return score
+    if row["monto_promedio"] > p90_monto_promedio:
+        score += 20
+    if row["velocidad_sospechosa"]:
+        score += 15
+    return min(score, 100)
 
 def main():
     print(f"Leyendo {CSV_IN.name}...")
@@ -51,12 +55,58 @@ def main():
     ).round(2)
     proveedores.drop(columns=["adj_count"], inplace=True)
 
-    proveedores["score"]               = proveedores.apply(compute_score, axis=1)
-    proveedores["flag_fantasma"]       = False
-    proveedores["flag_fraccionamiento"] = False
-    proveedores["flag_espejo"]         = False
+    # --- Variables adicionales para el score ---
 
-    proveedores["total_monto"]  = proveedores["total_monto"].round(2)
+    # 1. Monto promedio por contrato
+    proveedores["monto_promedio"] = proveedores["total_monto"] / proveedores["total_contratos"]
+    p90_monto_promedio = proveedores["monto_promedio"].quantile(0.90)
+
+    # 2. Velocidad de adjudicacion: crecimiento >300% YoY con presencia en multiples años
+    df["anio"] = pd.to_datetime(df["fecha_inicio"], errors="coerce").dt.year
+    yearly = df.groupby(["rfc", "anio"]).size().reset_index(name="n")
+
+    def max_yoy_growth(group):
+        counts = group.sort_values("anio")["n"].values
+        max_growth = 0.0
+        for i in range(1, len(counts)):
+            if counts[i - 1] > 0:
+                growth = (counts[i] - counts[i - 1]) / counts[i - 1] * 100
+                max_growth = max(max_growth, growth)
+        return max_growth
+
+    yoy = yearly.groupby("rfc").apply(max_yoy_growth).rename("max_yoy")
+    proveedores = proveedores.merge(yoy, on="rfc", how="left")
+    proveedores["max_yoy"] = proveedores["max_yoy"].fillna(0)
+
+    years_per_rfc = df.dropna(subset=["anio"]).groupby("rfc")["anio"].apply(set).rename("anios")
+    proveedores = proveedores.merge(years_per_rfc, on="rfc", how="left")
+
+    proveedores["velocidad_sospechosa"] = (
+        proveedores["anios"].apply(lambda s: isinstance(s, set) and len(s) > 1)
+        & (proveedores["max_yoy"] > 300)
+    )
+
+    # --- Score final ---
+    proveedores["score"] = proveedores.apply(
+        lambda row: compute_score(row, p90_monto_promedio), axis=1
+    )
+    proveedores["flag_fantasma"]        = False
+    proveedores["flag_fraccionamiento"] = False
+    proveedores["flag_espejo"]          = False
+
+    proveedores["total_monto"] = proveedores["total_monto"].round(2)
+
+    # Distribucion de scores
+    bins   = [0, 25, 50, 75, 100]
+    labels = ["0-25", "26-50", "51-75", "76-100"]
+    dist = pd.cut(proveedores["score"], bins=bins, labels=labels, include_lowest=True).value_counts().sort_index()
+    print("\nDistribucion de scores:")
+    for rango, count in dist.items():
+        print(f"  {rango}: {count:,} proveedores")
+
+    # Quitar columnas temporales antes de guardar
+    cols_temp = ["monto_promedio", "max_yoy", "anios", "velocidad_sospechosa"]
+    proveedores.drop(columns=[c for c in cols_temp if c in proveedores.columns], inplace=True)
 
     CSV_OUT.parent.mkdir(parents=True, exist_ok=True)
     proveedores.to_csv(CSV_OUT, index=False, encoding="utf-8")
