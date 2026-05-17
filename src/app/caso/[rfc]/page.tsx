@@ -17,6 +17,7 @@ import {
   TrendingUp,
   AlertCircle,
   ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import { ScoreBadge } from "@/components/score-badge";
 import { API_URL } from "@/lib/config";
@@ -100,6 +101,9 @@ export default function CasoPage() {
   const [provInfo, setProvInfo] = useState<ProvInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [analisis, setAnalisis] = useState<string | null>(null);
+  const [analizando, setAnalizando] = useState(false);
+  const [errorAnalisis, setErrorAnalisis] = useState<string | null>(null);
 
   useEffect(() => {
     if (!rfc) return;
@@ -185,6 +189,36 @@ export default function CasoPage() {
     ? FLAGS_CONFIG.filter((f) => provInfo.flags[f.key])
     : [];
 
+  async function analizarRed() {
+    if (!provInfo) return;
+    setAnalizando(true);
+    setErrorAnalisis(null);
+    setAnalisis(null);
+    try {
+      const res = await fetch("/api/analizar-red", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: provInfo.name,
+          rfc,
+          score: provInfo.score,
+          flags: provInfo.flags,
+          totalContratos: contratos.length,
+          totalMonto: stats?.totalMonto ?? 0,
+          numDependencias: provInfo.dependencias.length,
+          pctAdj: stats?.pctAdj ?? 0,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) setErrorAnalisis(data.error);
+      else setAnalisis(data.analisis);
+    } catch (e: unknown) {
+      setErrorAnalisis(e instanceof Error ? e.message : "Error desconocido");
+    } finally {
+      setAnalizando(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-3 text-slate-400">
@@ -232,8 +266,18 @@ export default function CasoPage() {
             </h1>
             <p className="mt-1 font-mono text-sm text-slate-400">{rfc}</p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
             {provInfo && <ScoreBadge score={provInfo.score} size="lg" />}
+            <button
+              onClick={analizarRed}
+              disabled={analizando || !provInfo}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <Sparkles
+                className={`h-3.5 w-3.5 ${analizando ? "animate-pulse" : ""}`}
+              />
+              {analizando ? "Analizando..." : "Analizar Red"}
+            </button>
             <Link
               href={`/explorador?rfc=${encodeURIComponent(rfc)}`}
               className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white hover:border-white/20 transition-all"
@@ -280,6 +324,39 @@ export default function CasoPage() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Análisis IA */}
+        {(analisis || errorAnalisis || analizando) && (
+          <div
+            className={`rounded-xl border p-5 ${
+              errorAnalisis
+                ? "border-yellow-500/30 bg-yellow-500/5"
+                : "border-red-500/20 bg-gradient-to-br from-red-950/30 to-slate-900/50"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles
+                className={`h-4 w-4 ${
+                  errorAnalisis ? "text-yellow-400" : "text-red-400"
+                } ${analizando ? "animate-pulse" : ""}`}
+              />
+              <h2 className="text-sm font-semibold text-white">
+                Análisis de Red
+              </h2>
+              <span className="text-xs text-slate-500">— Magistral IA</span>
+            </div>
+            {analizando && !analisis && !errorAnalisis ? (
+              <div className="flex items-center gap-2 text-slate-400 text-sm">
+                <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                Generando análisis con inteligencia artificial...
+              </div>
+            ) : errorAnalisis ? (
+              <p className="text-sm text-yellow-300">{errorAnalisis}</p>
+            ) : (
+              <p className="text-sm text-slate-200 leading-relaxed">{analisis}</p>
+            )}
           </div>
         )}
 
