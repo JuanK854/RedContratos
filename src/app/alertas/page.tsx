@@ -65,7 +65,7 @@ export default function AlertasPage() {
   const [error, setError] = useState<string | null>(null);
   const [tabActivo, setTabActivo] = useState<TipoAlerta | "Todas">("Todas");
   const [analizando, setAnalizando] = useState(false);
-  const [resultadoAnalisis, setResultadoAnalisis] = useState<{ enviadas: number; total: number } | null>(null);
+  const [resultadoAnalisis, setResultadoAnalisis] = useState<{ enviadas: number; total: number; mensaje: string } | null>(null);
 
   const ejecutarAnalisis = async () => {
     setAnalizando(true);
@@ -74,9 +74,9 @@ export default function AlertasPage() {
       const res = await fetch(`${API_URL}/analizar`, { method: "POST" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      setResultadoAnalisis({ enviadas: data.alertas_enviadas, total: data.total_detectados });
+      setResultadoAnalisis({ enviadas: data.alertas_enviadas, total: data.total_detectados, mensaje: data.mensaje });
     } catch {
-      setResultadoAnalisis({ enviadas: 0, total: 0 });
+      setResultadoAnalisis({ enviadas: 0, total: 0, mensaje: "Error al conectar con la API" });
     } finally {
       setAnalizando(false);
     }
@@ -159,11 +159,14 @@ export default function AlertasPage() {
             </button>
 
             {resultadoAnalisis && (
-              <div className="inline-flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-green-400 shrink-0" />
-                <span className="text-xs text-green-400 font-medium">
-                  {resultadoAnalisis.enviadas} WhatsApp enviados
-                  <span className="text-green-600"> · {resultadoAnalisis.total} con score &gt; 80</span>
+              <div className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 ${
+                resultadoAnalisis.enviadas > 0
+                  ? "border-green-500/30 bg-green-500/10"
+                  : "border-slate-500/30 bg-slate-800/50"
+              }`}>
+                <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${resultadoAnalisis.enviadas > 0 ? "text-green-400" : "text-slate-400"}`} />
+                <span className={`text-xs font-medium ${resultadoAnalisis.enviadas > 0 ? "text-green-400" : "text-slate-400"}`}>
+                  {resultadoAnalisis.mensaje}
                 </span>
               </div>
             )}
