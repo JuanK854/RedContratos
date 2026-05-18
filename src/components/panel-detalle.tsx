@@ -69,21 +69,23 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
                 {data.type}
               </span>
               <span className="font-mono text-xs text-white/15">{data.rfc}</span>
-              <ScoreBadge score={data.score} size="sm" />
+              {data.type === "proveedor" && <ScoreBadge score={data.score} size="sm" />}
             </div>
           </div>
         </div>
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
-          {/* Score Card */}
-          <div className="rounded-lg border border-white/5 bg-white/[0.02] p-5 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] text-white/25 uppercase tracking-widest">Score de Riesgo</p>
-              <p className={`text-lg font-medium mt-1 ${scoreInfo.textColor}`}>{scoreInfo.label}</p>
+          {/* Score Card — solo proveedores */}
+          {data.type === "proveedor" && (
+            <div className="rounded-lg border border-white/5 bg-white/[0.02] p-5 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-white/25 uppercase tracking-widest">Score de Riesgo</p>
+                <p className={`text-lg font-medium mt-1 ${scoreInfo.textColor}`}>{scoreInfo.label}</p>
+              </div>
+              <ScoreBadge score={data.score} size="lg" />
             </div>
-            <ScoreBadge score={data.score} size="lg" />
-          </div>
+          )}
 
           {/* Stats Cards - Bento */}
           <div className="grid grid-cols-2 gap-px bg-white/5 rounded-lg overflow-hidden border border-white/5">
@@ -91,15 +93,17 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
             <StatCard icon={DollarSign} label="Monto Total" value={data.montoTotal} />
           </div>
 
-          {/* Adjudicación Directa */}
-          <div className="rounded-lg border border-white/5 bg-white/[0.02] p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-white/30 tracking-wide uppercase">Adjudicación Directa</span>
-              <span className={`text-xl font-light tracking-tight tabular-nums ${adjColor}`}>{data.pctAdjDirecta}%</span>
+          {/* Adjudicación Directa — solo proveedores */}
+          {data.type === "proveedor" && (
+            <div className="rounded-lg border border-white/5 bg-white/[0.02] p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-white/30 tracking-wide uppercase">Adjudicación Directa</span>
+                <span className={`text-xl font-light tracking-tight tabular-nums ${adjColor}`}>{data.pctAdjDirecta}%</span>
+              </div>
+              <Progress value={data.pctAdjDirecta} className="h-1.5 bg-white/5" indicatorClassName="bg-red-500/60" />
+              <p className="mt-2 text-xs text-white/20">{adjLabel}</p>
             </div>
-            <Progress value={data.pctAdjDirecta} className="h-1.5 bg-white/5" indicatorClassName="bg-red-500/60" />
-            <p className="mt-2 text-xs text-white/20">{adjLabel}</p>
-          </div>
+          )}
 
           {/* Información de la Entidad */}
           <div>
