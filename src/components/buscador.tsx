@@ -136,8 +136,8 @@ export function Buscador() {
 
   return (
     <div className="relative w-full max-w-2xl">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+      <div className="relative group">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-white/40 transition-colors duration-300" />
         <input
           ref={inputRef}
           type="text"
@@ -146,10 +146,10 @@ export function Buscador() {
           onKeyDown={handleKeyDown}
           onFocus={() => query.trim() && setOpen(true)}
           placeholder="Buscar RFC, empresa o dependencia..."
-          className="w-full h-10 pl-10 pr-10 rounded-xl bg-slate-900 border border-white/10 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-red-600 focus:border-red-600 transition-all"
+          className="w-full h-10 pl-10 pr-10 rounded-lg bg-white/[0.03] border border-white/5 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-white/15 transition-all duration-300"
         />
         {loading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 animate-spin" />
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 animate-spin" />
         )}
         {query && !loading && (
           <button
@@ -158,7 +158,7 @@ export function Buscador() {
               setResults([]);
               setOpen(false);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 hover:text-white/50 transition-colors duration-200"
           >
             <X className="h-4 w-4" />
           </button>
@@ -168,55 +168,55 @@ export function Buscador() {
       {open && results.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-2 max-h-80 overflow-y-auto rounded-xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50 z-50"
+          className="absolute top-full left-0 right-0 mt-2 max-h-80 overflow-y-auto rounded-lg border border-white/5 bg-[#0f0f0f] shadow-2xl shadow-black/50 z-50 animate-fade-in"
         >
           {results.map((result, index) => (
             <button
               key={result.id}
               onClick={() => handleSelect(result)}
               onMouseEnter={() => setSelectedIndex(index)}
-              className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${
-                index === selectedIndex ? "bg-slate-800" : "hover:bg-slate-800"
+              className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all duration-200 ${
+                index === selectedIndex ? "bg-white/[0.04]" : "hover:bg-white/[0.03]"
               }`}
             >
-              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
-                <Building2 className="h-4 w-4" />
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.03] border border-white/5">
+                <Building2 className="h-4 w-4 text-white/25" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`text-sm font-medium truncate ${
-                      index === selectedIndex ? "text-red-500" : "text-slate-200"
+                    className={`text-sm font-medium truncate transition-colors duration-200 ${
+                      index === selectedIndex ? "text-white/90" : "text-white/70"
                     }`}
                   >
                     {result.name}
                   </span>
                   {result.flags.length > 0 && (
-                    <span className="shrink-0 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-400">
+                    <span className="shrink-0 rounded-full bg-red-500/5 border border-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-400/60">
                       {result.flags.length} alerta{result.flags.length > 1 ? "s" : ""}
                     </span>
                   )}
                 </div>
                 <div className="mt-0.5 flex items-center gap-2">
                   <ScoreBadge score={result.score} size="sm" />
-                  <span className="text-xs text-slate-500 font-mono">RFC: {result.rfc}</span>
+                  <span className="text-xs text-white/15 font-mono">RFC: {result.rfc}</span>
                 </div>
               </div>
             </button>
           ))}
 
-          <div className="flex items-center justify-between border-t border-white/5 px-4 py-2 text-[10px] text-slate-600">
-            <div className="flex items-center gap-1">
-              <kbd className="rounded bg-slate-800 px-1.5 py-0.5 font-mono">
+          <div className="flex items-center justify-between border-t border-white/[0.03] px-4 py-2.5 text-[10px] text-white/15">
+            <div className="flex items-center gap-1.5">
+              <kbd className="rounded bg-white/[0.03] border border-white/5 px-1.5 py-0.5 font-mono">
                 <ArrowUp className="h-3 w-3" />
               </kbd>
-              <kbd className="rounded bg-slate-800 px-1.5 py-0.5 font-mono">
+              <kbd className="rounded bg-white/[0.03] border border-white/5 px-1.5 py-0.5 font-mono">
                 <ArrowDown className="h-3 w-3" />
               </kbd>
               <span>para navegar</span>
             </div>
-            <div className="flex items-center gap-1">
-              <kbd className="rounded bg-slate-800 px-1.5 py-0.5 font-mono">
+            <div className="flex items-center gap-1.5">
+              <kbd className="rounded bg-white/[0.03] border border-white/5 px-1.5 py-0.5 font-mono">
                 <CornerDownLeft className="h-3 w-3" />
               </kbd>
               <span>para seleccionar</span>
@@ -226,8 +226,9 @@ export function Buscador() {
       )}
 
       {open && query && !loading && results.length === 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50 z-50 px-4 py-6 text-center">
-          <p className="text-sm text-slate-400">No se encontraron resultados para "{query}"</p>
+        <div className="absolute top-full left-0 right-0 mt-2 rounded-lg border border-white/5 bg-[#0f0f0f] shadow-2xl shadow-black/50 z-50 px-4 py-8 text-center animate-fade-in">
+          <Search className="mx-auto h-8 w-8 text-white/10 mb-3" />
+          <p className="text-sm text-white/25">No se encontraron resultados para "{query}"</p>
         </div>
       )}
     </div>

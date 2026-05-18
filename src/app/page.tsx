@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Network, Bell, BarChart3, Shield, ArrowRight, FileText, DollarSign, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { FileText, DollarSign, AlertTriangle, ArrowRight, Shield, Network } from "lucide-react";
 import { Buscador } from "@/components/buscador";
 import { API_URL } from "@/lib/config";
 
@@ -11,6 +11,39 @@ interface Stats {
   monto_total: number;
   porcentaje_opacidad: number;
   total_proveedores: number;
+}
+
+function useCountUp(end: number, duration: number = 2000, startOnMount: boolean = true) {
+  const [count, setCount] = useState(0);
+  const frameRef = useRef<number>(0);
+  const startTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!startOnMount) return;
+
+    const animate = (timestamp: number) => {
+      if (!startTimeRef.current) startTimeRef.current = timestamp;
+      const elapsed = timestamp - startTimeRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * end));
+
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    frameRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [end, duration, startOnMount]);
+
+  return count;
+}
+
+function AnimatedNumber({ value, suffix = "", prefix = "", decimals = 0 }: { value: number; suffix?: string; prefix?: string; decimals?: number }) {
+  const count = useCountUp(value, 2200);
+  const formatted = decimals > 0 ? count.toFixed(decimals) : count.toLocaleString("es-MX");
+  return <span>{prefix}{formatted}{suffix}</span>;
 }
 
 export default function Home() {
@@ -30,43 +63,41 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  const formatNumber = (n: number) => n.toLocaleString("es-MX");
-
   const formatMonto = (n: number) => {
-    if (n >= 1e12) return `$${(n / 1e12).toFixed(1)}T`;
-    if (n >= 1e9) return `$${(n / 1e9).toFixed(0)}B`;
-    if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`;
-    return `$${n}`;
+    if (n >= 1e12) return (n / 1e12).toFixed(1);
+    if (n >= 1e9) return (n / 1e9).toFixed(0);
+    if (n >= 1e6) return (n / 1e6).toFixed(0);
+    return n.toString();
   };
 
+  const montoBillions = stats.monto_total >= 1e9 ? stats.monto_total / 1e9 : 0;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[#0a0a0a]">
       {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
         <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600">
-              <Network className="h-4 w-4 text-white" />
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 group-hover:border-red-500/30 transition-all duration-300">
+              <Network className="h-4 w-4 text-white/80 group-hover:text-red-400 transition-colors duration-300" />
             </div>
             <span className="text-lg font-bold tracking-tight">
-              <span className="text-red-500">Red</span>Contratos
+              <span className="text-white">Red</span>
+              <span className="text-white/50">Contratos</span>
             </span>
           </Link>
 
-          {/* Search */}
           <div className="hidden md:block flex-1 max-w-md mx-8">
             <Buscador />
           </div>
 
-          {/* Nav */}
           <nav className="flex items-center gap-3 sm:gap-6">
-            <Link href="/top" className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors">
+            <Link href="/top" className="flex items-center gap-1.5 text-sm text-white/40 hover:text-white transition-all duration-300">
               <AlertTriangle className="h-4 w-4" />
               <span className="hidden sm:inline">Top Riesgo</span>
             </Link>
             <Link href="/explorador"
-              className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-red-500/50 px-3 sm:px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-white/10 px-3 sm:px-4 py-2 text-sm font-medium text-white/60 hover:text-white hover:border-white/20 transition-all duration-300"
             >
               <span className="hidden sm:inline">Explorar Grafo</span>
               <Network className="h-4 w-4 sm:hidden" />
@@ -77,62 +108,76 @@ export default function Home() {
 
       {/* HERO */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
+        {/* Glow de fondo */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at 50% 0%, rgba(127, 29, 29, 0.12) 0%, rgba(10, 10, 10, 0) 70%)",
+          }}
+        />
 
-        <div className="relative mx-auto max-w-5xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20 text-center">
-          <div className="mb-6 sm:mb-8 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/5 px-3 sm:px-4 py-1.5">
-            <Shield className="h-4 w-4 text-red-400" />
-            <span className="text-xs sm:text-sm font-medium text-red-400">Plataforma de Inteligencia Anticorrupción</span>
+        {/* Grid pattern */}
+        <div className="absolute inset-0 grid-bg opacity-30" />
+
+        <div className="relative mx-auto max-w-5xl px-4 sm:px-6 pt-20 sm:pt-28 pb-16 sm:pb-24 text-center">
+          {/* Badge */}
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-4 py-2 animate-fade-in">
+            <Shield className="h-3.5 w-3.5 text-white/40" />
+            <span className="text-xs font-medium text-white/50 tracking-wide uppercase">Plataforma de Inteligencia Anticorrupción</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold tracking-tight">
+          {/* Title */}
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight animate-slide-up">
             <span className="text-white">Transparencia en la</span>
             <br />
-            <span className="text-red-500">Contratación Pública</span>
+            <span className="text-white">Contratación Pública</span>
+            <span className="inline-block w-3 h-3 rounded-full bg-red-500 ml-2 align-middle" />
           </h1>
 
-          <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-base sm:text-lg text-slate-400 leading-relaxed px-2">
+          {/* Subtitle */}
+          <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-base sm:text-lg text-white/40 leading-relaxed px-2 animate-slide-up" style={{ animationDelay: "0.15s" }}>
             Analiza redes de contratistas, detecta patrones de riesgo y explora
             conexiones ocultas en los contratos del gobierno federal mexicano.
           </p>
 
-          <div className="mt-8 sm:mt-10 flex flex-col items-center justify-center gap-3 sm:gap-4 sm:flex-row">
+          {/* CTA */}
+          <div className="mt-10 sm:mt-12 animate-slide-up" style={{ animationDelay: "0.3s" }}>
             <Link
               href="/explorador"
-              className="flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 text-base font-semibold text-white hover:bg-red-500 transition-colors w-full sm:w-auto justify-center"
+              className="group inline-flex items-center gap-2 rounded-lg bg-red-600 px-8 py-3.5 text-base font-semibold text-white hover:bg-red-500 transition-all duration-300 shadow-lg shadow-red-950/30 hover:shadow-red-950/50"
             >
               Explorar el Grafo
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
             </Link>
           </div>
         </div>
       </section>
 
       {/* STATS */}
-      <section className="mx-auto max-w-5xl px-4 sm:px-6 pb-16 sm:pb-24">
-        <div className="grid gap-3 sm:gap-4 sm:grid-cols-3">
-          <StatCard
-            icon={FileText}
-            value={formatNumber(stats.total_contratos)}
-            label="Total de Contratos"
-            sublabel="Dataset CompraNet 2026"
-          />
-          <StatCard
-            icon={DollarSign}
-            value={formatMonto(stats.monto_total)}
-            valueSuffix="MXN"
-            label="Monto Total Analizado"
-            sublabel="Gasto federal identificado"
-          />
-          <StatCard
-            icon={AlertTriangle}
-            value={`${stats.porcentaje_opacidad}%`}
-            label="Adjudicaciones Directas"
-            sublabel="Contratos otorgados sin licitación"
-            highlight
-          />
+      <section className="mx-auto max-w-5xl px-4 sm:px-6 pb-20 sm:pb-28">
+        <div className="grid gap-px bg-white/5 rounded-xl overflow-hidden border border-white/5">
+          <div className="grid sm:grid-cols-3">
+            <StatCard
+              icon={FileText}
+              value={<AnimatedNumber value={stats.total_contratos} />}
+              label="Total de Contratos"
+              sublabel="Dataset CompraNet 2026"
+              borderRight
+            />
+            <StatCard
+              icon={DollarSign}
+              value={<><span className="text-white/40">$</span><AnimatedNumber value={montoBillions} decimals={0} /><span className="ml-1 text-lg sm:text-xl text-white/25 font-normal">B</span><span className="ml-1 text-lg sm:text-xl text-white/25 font-normal">MXN</span></>}
+              label="Monto Total Analizado"
+              sublabel="Gasto federal identificado"
+              borderRight
+            />
+            <StatCard
+              icon={AlertTriangle}
+              value={<AnimatedNumber value={stats.porcentaje_opacidad} suffix="%" />}
+              label="Adjudicaciones Directas"
+              sublabel="Contratos otorgados sin licitación"
+              highlight
+            />
+          </div>
         </div>
       </section>
     </div>
@@ -142,29 +187,28 @@ export default function Home() {
 function StatCard({
   icon: Icon,
   value,
-  valueSuffix,
   label,
   sublabel,
   highlight,
+  borderRight,
 }: {
   icon: typeof FileText;
-  value: string;
-  valueSuffix?: string;
+  value: React.ReactNode;
   label: string;
   sublabel: string;
   highlight?: boolean;
+  borderRight?: boolean;
 }) {
   return (
-    <div className="group rounded-xl border border-slate-800 bg-slate-900/50 p-4 sm:p-6 transition-all hover:border-red-500/50 hover:bg-slate-900">
-      <div className="mb-3 sm:mb-4 flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-lg bg-slate-800">
-        <Icon className={`h-4 sm:h-5 w-4 sm:w-5 ${highlight ? "text-red-400" : "text-slate-400"}`} />
+    <div className={`group bg-[#0a0a0a] p-6 sm:p-8 pb-10 sm:pb-12 transition-all duration-300 hover:bg-white/[0.02] ${borderRight ? 'sm:border-r sm:border-white/5' : ''}`}>
+      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.03] border border-white/5 group-hover:border-white/10 transition-all duration-300">
+        <Icon className={`h-4 w-4 ${highlight ? "text-red-400" : "text-white/30"}`} />
       </div>
-      <p className={`text-3xl sm:text-5xl font-bold tracking-tight ${highlight ? "text-red-500" : "text-white"}`}>
+      <p className={`text-3xl sm:text-5xl font-light tracking-tighter leading-none ${highlight ? "text-red-400" : "text-white"}`}>
         {value}
-        {valueSuffix && <span className="ml-1 text-lg sm:text-2xl text-slate-500">{valueSuffix}</span>}
       </p>
-      <p className="mt-1 sm:mt-2 text-xs sm:text-sm font-medium text-slate-300">{label}</p>
-      <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-slate-500">{sublabel}</p>
+      <p className="mt-3 text-xs font-medium text-white/50 tracking-wide uppercase">{label}</p>
+      <p className="mt-1 text-[11px] text-white/25">{sublabel}</p>
     </div>
   );
 }
