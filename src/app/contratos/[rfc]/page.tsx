@@ -33,7 +33,7 @@ export default function ContratosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center text-white/40">
         <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mb-4" />
         <p>Cargando el historial de contratos...</p>
       </div>
@@ -41,11 +41,11 @@ export default function ContratosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6 md:p-12">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-6 md:p-12">
       {/* Botón para regresar al explorador */}
       <button 
         onClick={() => router.back()} 
-        className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8"
+        className="flex items-center gap-2 text-white/40 hover:text-white transition-colors mb-8"
       >
         <ArrowLeft className="w-4 h-4" />
         Volver a la Red
@@ -58,15 +58,15 @@ export default function ContratosPage() {
         </div>
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Historial de Contratos</h1>
-          <p className="font-mono text-slate-400">RFC: {rfc}</p>
+          <p className="font-mono text-white/40">RFC: {rfc}</p>
         </div>
       </div>
 
       {/* Tabla de Datos */}
-      <div className="rounded-xl border border-white/10 bg-slate-900/50 overflow-hidden shadow-xl">
+      <div className="rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+            <thead className="bg-white/[0.03] text-white/40 text-xs uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-4 font-medium">ID / Código</th>
                 <th className="px-6 py-4 font-medium">Institución</th>
@@ -79,7 +79,7 @@ export default function ContratosPage() {
             <tbody className="divide-y divide-white/5">
               {contratos.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={6} className="px-6 py-12 text-center text-white/30">
                     No se encontraron contratos para este RFC o el endpoint no está disponible.
                   </td>
                 </tr>
@@ -87,12 +87,12 @@ export default function ContratosPage() {
                 contratos.map((c: any, i: number) => (
                   <tr key={i} className="hover:bg-white/[0.02] transition-colors">
                     {/* ID del Contrato */}
-                    <td className="px-6 py-4 font-mono text-xs text-slate-400">
+                    <td className="px-6 py-4 font-mono text-xs text-white/40">
                       {c.num_contrato || "SIN CÓDIGO"}
                     </td>
                     
                     {/* Institución */}
-                    <td className="px-6 py-4 font-medium text-slate-200">
+                    <td className="px-6 py-4 font-medium text-white/80">
                       <div className="max-w-xs truncate" title={c.institucion}>
                         {c.institucion}
                       </div>
@@ -100,23 +100,23 @@ export default function ContratosPage() {
                     
                     {/* Procedimiento */}
                     <td className="px-6 py-4">
-                      <span className="inline-flex max-w-[200px] truncate rounded-full bg-slate-800/80 px-2.5 py-1 text-[10px] text-slate-300 border border-white/10" title={c.tipo_procedimiento || "NO ESPECIFICADO"}>
+                      <span className="inline-flex max-w-[200px] truncate rounded-full bg-white/[0.04] px-2.5 py-1 text-[10px] text-white/60 border border-white/5" title={c.tipo_procedimiento || "NO ESPECIFICADO"}>
                         {c.tipo_procedimiento || "NO ESPECIFICADO"}
                       </span>
                     </td>
 
                     {/* Fecha de Inicio */}
-                    <td className="px-6 py-4 text-slate-300">
+                    <td className="px-6 py-4 text-white/60">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3 text-slate-500" />
+                        <Calendar className="w-3 h-3 text-white/30" />
                         {c.fecha_inicio || "N/A"}
                       </div>
                     </td>
 
                     {/* Fecha de Fin (NUEVA CELDA) */}
-                    <td className="px-6 py-4 text-slate-300">
+                    <td className="px-6 py-4 text-white/60">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3 text-slate-500" />
+                        <Calendar className="w-3 h-3 text-white/30" />
                         {c.fecha_fin || "N/A"}
                       </div>
                     </td>

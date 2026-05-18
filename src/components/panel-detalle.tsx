@@ -124,7 +124,7 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
           <div className="border-t border-white/5 px-6 py-4 flex gap-2">
             <Link
               href={`/contratos/${data.rfc}`}
-              className="flex-1 inline-flex items-center justify-center rounded-md border border-white/10 bg-transparent px-4 py-2.5 text-sm font-medium text-white/40 hover:text-white/70 hover:border-white/20 transition-all duration-300"
+              className="flex-1 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-white/40 hover:text-white/70 hover:border-white/20 hover:bg-white/[0.06] transition-all duration-300"
             >
               <FileText className="mr-2 h-4 w-4" />
               Ver Todos
@@ -132,7 +132,7 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
 
             <Link
               href={`/caso/${data.rfc}`}
-              className="flex-1 inline-flex items-center justify-center rounded-md bg-white px-4 py-2.5 text-sm font-medium text-[#0a0a0a] hover:bg-white/90 transition-all duration-300"
+              className="flex-1 inline-flex items-center justify-center rounded-md border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-300"
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Analizar con IA

@@ -221,7 +221,7 @@ export default function CasoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-3 text-slate-400">
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center gap-3 text-white/40">
         <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm">Cargando análisis...</p>
       </div>
@@ -229,9 +229,9 @@ export default function CasoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Topbar */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600">
@@ -243,7 +243,7 @@ export default function CasoPage() {
           </Link>
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Volver</span>
@@ -264,7 +264,7 @@ export default function CasoPage() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
               {nombre}
             </h1>
-            <p className="mt-1 font-mono text-sm text-slate-400">{rfc}</p>
+            <p className="mt-1 font-mono text-sm text-white/40">{rfc}</p>
           </div>
           <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
             {provInfo && <ScoreBadge score={provInfo.score} size="lg" />}
@@ -280,7 +280,7 @@ export default function CasoPage() {
             </button>
             <Link
               href={`/explorador?rfc=${encodeURIComponent(rfc)}`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white hover:border-white/20 transition-all"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2 text-xs font-medium text-white/60 hover:text-white hover:border-white/20 transition-all"
             >
               <Network className="h-3.5 w-3.5" />
               Ver Red
@@ -300,7 +300,7 @@ export default function CasoPage() {
         {/* Flags activos */}
         {flagsActivos.length > 0 && (
           <div>
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            <h2 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
               Patrones de Riesgo Detectados
             </h2>
             <div className="grid gap-3 sm:grid-cols-3">
@@ -317,7 +317,7 @@ export default function CasoPage() {
                         {flag.label}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 leading-snug">
+                    <p className="text-xs text-white/40 leading-snug">
                       {flag.desc}
                     </p>
                   </div>
@@ -345,17 +345,17 @@ export default function CasoPage() {
               <h2 className="text-sm font-semibold text-white">
                 Análisis de Red
               </h2>
-              <span className="text-xs text-slate-500">— Magistral IA</span>
+              <span className="text-xs text-white/30">— Magistral IA</span>
             </div>
             {analizando && !analisis && !errorAnalisis ? (
-              <div className="flex items-center gap-2 text-slate-400 text-sm">
+              <div className="flex items-center gap-2 text-white/40 text-sm">
                 <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin shrink-0" />
                 Generando análisis con inteligencia artificial...
               </div>
             ) : errorAnalisis ? (
               <p className="text-sm text-yellow-300">{errorAnalisis}</p>
             ) : (
-              <p className="text-sm text-slate-200 leading-relaxed">{analisis}</p>
+              <p className="text-sm text-white/80 leading-relaxed">{analisis}</p>
             )}
           </div>
         )}
@@ -389,9 +389,9 @@ export default function CasoPage() {
 
         {/* Monto por Año */}
         {montosPorAnio.length > 0 && (
-          <div className="rounded-xl border border-white/10 bg-slate-900/50 p-5">
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5">
             <div className="flex items-center gap-2 mb-5">
-              <TrendingUp className="h-4 w-4 text-slate-400" />
+              <TrendingUp className="h-4 w-4 text-white/40" />
               <h2 className="text-sm font-semibold text-white">
                 Monto por Año
               </h2>
@@ -399,10 +399,10 @@ export default function CasoPage() {
             <div className="space-y-3">
               {montosPorAnio.map(({ year, monto, pct }) => (
                 <div key={year} className="flex items-center gap-3">
-                  <span className="w-10 text-xs font-mono text-slate-400 shrink-0">
+                  <span className="w-10 text-xs font-mono text-white/40 shrink-0">
                     {year}
                   </span>
-                  <div className="flex-1 h-6 rounded bg-slate-800 overflow-hidden">
+                  <div className="flex-1 h-6 rounded bg-white/[0.05] overflow-hidden">
                     <div
                       className="h-full rounded bg-red-500/70 transition-all duration-500"
                       style={{ width: `${pct}%` }}
@@ -419,9 +419,9 @@ export default function CasoPage() {
 
         {/* Dependencias vinculadas */}
         {provInfo && provInfo.dependencias.length > 0 && (
-          <div className="rounded-xl border border-white/10 bg-slate-900/50 p-5">
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Building2 className="h-4 w-4 text-slate-400" />
+              <Building2 className="h-4 w-4 text-white/40" />
               <h2 className="text-sm font-semibold text-white">
                 Dependencias Vinculadas ({provInfo.dependencias.length})
               </h2>
@@ -432,16 +432,16 @@ export default function CasoPage() {
                   key={dep.nombre}
                   className="flex items-center gap-3 py-2.5"
                 >
-                  <span className="text-xs text-slate-600 w-5 shrink-0 text-right">
+                  <span className="text-xs text-white/20 w-5 shrink-0 text-right">
                     {i + 1}
                   </span>
                   <span
-                    className="flex-1 text-sm text-slate-200 truncate"
+                    className="flex-1 text-sm text-white/80 truncate"
                     title={dep.nombre}
                   >
                     {dep.nombre}
                   </span>
-                  <span className="text-xs text-slate-500 shrink-0">
+                  <span className="text-xs text-white/30 shrink-0">
                     {dep.num_contratos}{" "}
                     {dep.num_contratos === 1 ? "contrato" : "contratos"}
                   </span>
@@ -452,7 +452,7 @@ export default function CasoPage() {
               ))}
             </div>
             {provInfo.dependencias.length > 10 && (
-              <p className="mt-3 text-xs text-slate-500 text-center">
+              <p className="mt-3 text-xs text-white/30 text-center">
                 +{provInfo.dependencias.length - 10} dependencias más
               </p>
             )}
@@ -460,9 +460,9 @@ export default function CasoPage() {
         )}
 
         {/* Timeline de Contratos */}
-        <div className="rounded-xl border border-white/10 bg-slate-900/50 overflow-hidden">
-          <div className="flex items-center gap-2 p-5 border-b border-white/10">
-            <Calendar className="h-4 w-4 text-slate-400" />
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden">
+          <div className="flex items-center gap-2 p-5 border-b border-white/5">
+            <Calendar className="h-4 w-4 text-white/40" />
             <h2 className="text-sm font-semibold text-white">
               Timeline de Contratos ({contratos.length})
             </h2>
@@ -475,14 +475,14 @@ export default function CasoPage() {
           </div>
 
           {contratos.length === 0 ? (
-            <div className="p-12 text-center text-slate-500 text-sm">
+            <div className="p-12 text-center text-white/30 text-sm">
               No se encontraron contratos para este RFC
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead className="text-slate-500 text-xs uppercase tracking-wider bg-slate-900/80">
+                  <thead className="text-white/30 text-xs uppercase tracking-wider bg-white/[0.03]">
                     <tr>
                       <th className="px-5 py-3 font-medium">Fecha Inicio</th>
                       <th className="px-5 py-3 font-medium">Fecha Fin</th>
@@ -503,13 +503,13 @@ export default function CasoPage() {
                           key={i}
                           className="hover:bg-white/[0.02] transition-colors"
                         >
-                          <td className="px-5 py-3 font-mono text-xs text-slate-400">
+                          <td className="px-5 py-3 font-mono text-xs text-white/40">
                             {c.fecha_inicio || "—"}
                           </td>
-                          <td className="px-5 py-3 font-mono text-xs text-slate-400">
+                          <td className="px-5 py-3 font-mono text-xs text-white/40">
                             {c.fecha_fin || "—"}
                           </td>
-                          <td className="px-5 py-3 text-slate-200">
+                          <td className="px-5 py-3 text-white/80">
                             <span
                               className="block max-w-xs truncate"
                               title={c.institucion}
@@ -522,7 +522,7 @@ export default function CasoPage() {
                               className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border ${
                                 esDirecta
                                   ? "text-red-400 bg-red-500/10 border-red-500/30"
-                                  : "text-slate-400 bg-slate-800 border-white/10"
+                                  : "text-white/40 bg-white/[0.05] border-white/5"
                               }`}
                             >
                               {c.tipo_procedimiento || "N/A"}
@@ -567,12 +567,12 @@ function StatCard({
   danger?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
       <div className="flex items-center gap-2 mb-2">
         <Icon
-          className={`h-4 w-4 ${danger ? "text-red-400" : "text-slate-500"}`}
+          className={`h-4 w-4 ${danger ? "text-red-400" : "text-white/30"}`}
         />
-        <span className="text-xs text-slate-400">{label}</span>
+        <span className="text-xs text-white/40">{label}</span>
       </div>
       <p className={`text-xl font-bold ${danger ? "text-red-400" : "text-white"}`}>
         {value}
