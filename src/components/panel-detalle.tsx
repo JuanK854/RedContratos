@@ -119,24 +119,26 @@ export function PanelDetalle({ open, onOpenChange, data = MOCK_DATA }: PanelDeta
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-white/5 px-6 py-4 flex gap-2">
-          <Link
-            href={`/contratos/${data.rfc}`}
-            className="flex-1 inline-flex items-center justify-center rounded-md border border-white/10 bg-transparent px-4 py-2.5 text-sm font-medium text-white/40 hover:text-white/70 hover:border-white/20 transition-all duration-300"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Ver Todos
-          </Link>
+        {/* Footer — solo para proveedores */}
+        {data.type === "proveedor" && (
+          <div className="border-t border-white/5 px-6 py-4 flex gap-2">
+            <Link
+              href={`/contratos/${data.rfc}`}
+              className="flex-1 inline-flex items-center justify-center rounded-md border border-white/10 bg-transparent px-4 py-2.5 text-sm font-medium text-white/40 hover:text-white/70 hover:border-white/20 transition-all duration-300"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Ver Todos
+            </Link>
 
-          <Link
-            href={`/caso/${data.rfc}`}
-            className="flex-1 inline-flex items-center justify-center rounded-md bg-white px-4 py-2.5 text-sm font-medium text-[#0a0a0a] hover:bg-white/90 transition-all duration-300"
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Analizar con IA
-          </Link>
-        </div>
+            <Link
+              href={`/caso/${data.rfc}`}
+              className="flex-1 inline-flex items-center justify-center rounded-md bg-white px-4 py-2.5 text-sm font-medium text-[#0a0a0a] hover:bg-white/90 transition-all duration-300"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Analizar con IA
+            </Link>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

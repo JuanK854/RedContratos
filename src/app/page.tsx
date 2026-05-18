@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { FileText, DollarSign, AlertTriangle, ArrowRight, Shield, Network } from "lucide-react";
-import { Buscador } from "@/components/buscador";
 import { API_URL } from "@/lib/config";
 
 interface Stats {
@@ -86,10 +85,6 @@ export default function Home() {
               <span className="text-white/50">Contratos</span>
             </span>
           </Link>
-
-          <div className="hidden md:block flex-1 max-w-md mx-8">
-            <Buscador />
-          </div>
 
           <nav className="flex items-center gap-3 sm:gap-6">
             <Link href="/top" className="flex items-center gap-1.5 text-sm text-white/40 hover:text-white transition-all duration-300">

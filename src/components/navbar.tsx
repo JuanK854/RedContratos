@@ -13,9 +13,9 @@ import {
 import { Buscador } from "@/components/buscador";
 
 const NAV_ITEMS = [
-  { href: "/explorador", label: "Explorador de Grafos", icon: Network },
-  { href: "/top", label: "Top Riesgo", icon: AlertTriangle },
-  { href: "/alertas", label: "Alertas Activas", icon: FolderOpen },
+  { href: "/explorador", label: "Explorador de Grafos", icon: Network, iconColor: "" },
+  { href: "/top", label: "Top Riesgo", icon: AlertTriangle, iconColor: "text-red-400" },
+  { href: "/alertas", label: "Alertas Activas", icon: FolderOpen, iconColor: "" },
 ];
 
 interface NavbarProps {
@@ -52,15 +52,10 @@ export function Navbar({ children }: NavbarProps) {
         </Link>
 
         {/* Search */}
-        <div className="flex-1 max-w-xl">
+        <div className="flex-1 max-w-xl mx-auto">
           <Buscador />
         </div>
 
-        {/* Live badge */}
-        <div className="hidden sm:flex items-center gap-1.5 ml-4 shrink-0 px-3 py-1 rounded-full border border-white/5 bg-white/[0.02]">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500/60 animate-pulse-live" />
-          <span className="text-xs font-medium text-white/30">Live</span>
-        </div>
       </header>
 
       {/* BODY */}
@@ -72,7 +67,7 @@ export function Navbar({ children }: NavbarProps) {
               const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
               return (
                 <Link key={item.href} href={item.href}>
-                  <SidebarLink icon={item.icon} label={item.label} active={isActive} />
+                  <SidebarLink icon={item.icon} label={item.label} active={isActive} iconColor={item.iconColor} />
                 </Link>
               );
             })}
@@ -96,7 +91,7 @@ export function Navbar({ children }: NavbarProps) {
                   const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
                   return (
                     <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}>
-                      <SidebarLink icon={item.icon} label={item.label} active={isActive} />
+                      <SidebarLink icon={item.icon} label={item.label} active={isActive} iconColor={item.iconColor} />
                     </Link>
                   );
                 })}
@@ -116,10 +111,12 @@ function SidebarLink({
   icon: Icon,
   label,
   active,
+  iconColor,
 }: {
   icon: typeof Network;
   label: string;
   active?: boolean;
+  iconColor?: string;
 }) {
   return (
     <div
@@ -129,7 +126,7 @@ function SidebarLink({
           : "text-white/30 hover:text-white/60 hover:bg-white/[0.02]"
       }`}
     >
-      <Icon className="w-4 h-4 shrink-0" />
+      <Icon className={`w-4 h-4 shrink-0 ${iconColor || ""}`} />
       <span className="truncate">{label}</span>
     </div>
   );
