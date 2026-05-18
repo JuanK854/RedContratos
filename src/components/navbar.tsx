@@ -6,9 +6,7 @@ import { useState } from "react";
 import {
   Network,
   AlertTriangle,
-  BarChart3,
   FolderOpen,
-  Search,
   Menu,
   X,
 } from "lucide-react";
@@ -17,9 +15,7 @@ import { Buscador } from "@/components/buscador";
 const NAV_ITEMS = [
   { href: "/explorador", label: "Explorador de Grafos", icon: Network },
   { href: "/top", label: "Top Riesgo", icon: AlertTriangle },
-  { href: "/alertas", label: "Alertas Activas", icon: AlertTriangle },
-  { href: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
-  { href: "/casos", label: "Casos Detectados", icon: FolderOpen },
+  { href: "/alertas", label: "Alertas Activas", icon: FolderOpen },
 ];
 
 interface NavbarProps {
